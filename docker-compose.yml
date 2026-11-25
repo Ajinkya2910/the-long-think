@@ -1,0 +1,15 @@
+services:
+  pipeline:
+    build: .
+    environment:
+      - ANTHROPIC_API_KEY        # optional: enables Claude narratives
+      - LICHESS_TOKEN            # optional
+      - ENGINE_DEPTH             # optional override
+    volumes:
+      - ./data:/app/data
+      - ./web/data:/app/web/data
+  web:
+    image: nginx:1.27-alpine
+    ports: ["8080:80"]
+    volumes:
+      - ./web:/usr/share/nginx/html:ro

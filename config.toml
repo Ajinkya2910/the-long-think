@@ -1,0 +1,69 @@
+# The Long Think — pipeline configuration.
+# Secrets never live here: ANTHROPIC_API_KEY and LICHESS_TOKEN come from env vars.
+
+[match]
+name = "FIDE World Chess Championship 2026"
+short_name = "WCC 2026"
+broadcast_id = "qfkdt8mn"          # Lichess broadcast tournament id
+players = ["Gukesh D", "Sindarov, Javokhir"]
+# Display names / ids keyed by the PGN name. Colour = categorical slot in the UI.
+[match.display]
+"Gukesh D" = { short = "Gukesh", slot = 1 }
+"Sindarov, Javokhir" = { short = "Sindarov", slot = 2 }
+
+[lichess]
+base = "https://lichess.org"
+explorer = "https://explorer.lichess.ovh"
+request_pause_s = 1.0               # be polite: one request at a time
+
+[time_control]
+# FIDE WCC 2026: 120 min for 40 moves, then 30 min for the rest,
+# 30 s increment per move starting from move 41.
+# The live PGN header is inconsistent between rounds, so the config is the
+# source of truth unless prefer_pgn_header = true and the header parses.
+prefer_pgn_header = false
+periods = [ { moves = 40, seconds = 7200 }, { seconds = 1800 } ]
+increment = 30
+increment_from_move = 41
+
+[engine]
+path = "stockfish"                  # or an absolute path; env STOCKFISH_PATH overrides
+depth = 20
+multipv = 5                         # 5 lines for difficulty; top 3 are exported
+threads = 4
+hash_mb = 512
+
+[clock]
+long_think_seconds = 900            # > 15 min is always a long think
+long_think_top_n = 5                # ...plus each player's top N thinks
+
+[opening]
+min_master_games = 1                # played move needs >= this many master games to count as "book"
+
+[difficulty]
+good_move_window = 4.0              # win% points from best to still count as a "good" move
+only_move_gap = 10.0                # win% gap best->2nd that makes it an "only move"
+obvious_discount = 0.25             # recaptures / check evasions are rarely hard
+
+[classification]                    # win% lost by the mover (Lichess-style thresholds)
+inaccuracy = 5.0
+mistake = 10.0
+blunder = 15.0
+
+[critical]
+top_n = 5
+min_gap_plies = 4
+time_norm_seconds = 1800            # a 30-min think scores 1.0 on the time axis
+weight_swing = 0.5
+weight_time = 0.3
+weight_difficulty = 0.2
+novelty_bonus = 0.15                # leaving theory is always part of the story
+
+[narrative]
+enabled = true                      # uses Claude only if ANTHROPIC_API_KEY (or a profile) is available
+model = "claude-opus-5-5"
+effort = "medium"
+
+[paths]
+data_dir = "data"
+web_data_dir = "web/data"

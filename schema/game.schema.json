@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://longthink.local/schema/game.schema.json",
+  "title": "The Long Think — per-game analysis",
+  "description": "One file per game, written by the pipeline to web/data/games/<id>.json. All evaluations are White's point of view unless a field name says otherwise. Times are seconds.",
+  "type": "object",
+  "required": ["schema_version", "id", "result", "players", "time_control", "engine", "opening", "moves", "critical_moments", "summary"],
+  "$defs": {
+    "eval": {
+      "type": "object",
+      "required": ["cp", "mate", "wp"],
+      "properties": {
+        "cp": {"type": ["integer", "null"], "description": "centipawns, White POV"},
+        "mate": {"type": ["integer", "null"], "description": "mate in N (positive = White mates)"},
+        "wp": {"type": "number", "minimum": 0, "maximum": 100, "description": "White's winning chances %, Lichess model"}
+      }
+    },
+    "line": {
+      "type": "object",
+      "required": ["san", "uci", "cp", "mate", "pv_san"],
+      "properties": {
+        "san": {"type": "string"}, "uci": {"type": "string"},
+        "cp": {"type": ["integer", "null"]}, "mate": {"type": ["integer", "null"]},
+        "pv_san": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "player": {
+      "type": "object",
+      "required": ["name", "slot"],
+      "properties": {"name": {"type": "string"}, "elo": {"type": ["string", "null"]}, "short": {"type": ["string", "null"]}, "slot": {"type": "integer"}}
+    }
+  },
+  "properties": {
+    "schema_version": {"const": 1},
+    "id": {"type": "string", "pattern": "^[a-z0-9-]+$"},
+    "round": {"type": ["string", "null"]},
+    "date": {"type": ["string", "null"]},
+    "result": {"enum": ["1-0", "0-1", "1/2-1/2", "*"]},
+    "eco": {"type": ["string", "null"]},
+    "opening_name": {"type": ["string", "null"]},
+    "players": {"type": "object", "required": ["white", "black"], "properties": {"white": {"$ref": "#/$defs/player"}, "black": {"$ref": "#/$defs/player"}}},
+    "time_control": {
+      "type": "object",
+      "required": ["periods", "increment", "increment_from_move"],
+      "properties": {
+        "periods": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["seconds"], "properties": {"moves": {"type": ["integer", "null"]}, "seconds": {"type": "integer"}}}},
+        "increment": {"type": "integer"}, "increment_from_move": {"type": "integer"}, "description": {"type": "string"}
+      }
+    },
+    "engine": {"type": "object", "required": ["name", "depth", "multipv"]},
+    "opening": {
+      "type": "object",
+      "required": ["available", "novelty_ply", "book"],
+      "properties": {
+        "available": {"type": "boolean"},
+        "novelty_ply": {"type": ["integer", "null"], "description": "first ply whose move is not in the masters database"},
+        "book": {"type": "array", "items": {"type": "object", "required": ["ply", "san", "games"]}}
+      }
+    },
+    "moves": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["ply", "move_number", "side", "player", "san", "uci", "label", "fen_before", "fen_after", "clock", "eval_before", "eval_after", "top_lines", "played_rank", "wp_loss", "cp_loss", "accuracy", "classification", "difficulty", "in_book", "phase", "tags"],
+        "properties": {
+          "ply": {"type": "integer", "minimum": 0},
+          "side": {"enum": ["white", "black"]},
+          "clock": {
+            "type": "object",
+            "required": ["spent", "remaining", "adjustment", "long_think"],
+            "properties": {
+              "spent": {"type": ["integer", "null"], "description": "null when unknown or when the clock was adjusted"},
+              "remaining": {"type": ["integer", "null"]},
+              "adjustment": {"type": "integer", "minimum": 0, "description": "seconds added outside the rules (e.g. arbiter award)"},
+              "long_think": {"type": "boolean"}
+            }
+          },
+          "eval_before": {"$ref": "#/$defs/eval"},
+          "eval_after": {"$ref": "#/$defs/eval"},
+          "top_lines": {"type": "array", "maxItems": 3, "items": {"$ref": "#/$defs/line"}},
+          "played_rank": {"type": ["integer", "null"], "description": "rank among engine lines; null = outside multipv"},
+          "wp_loss": {"type": "number", "minimum": 0},
+          "cp_loss": {"type": "integer", "minimum": 0},
+          "accuracy": {"type": "number", "minimum": 0, "maximum": 100},
+          "classification": {"enum": [null, "inaccuracy", "mistake", "blunder"]},
+          "difficulty": {
+            "type": "object",
+            "required": ["score", "good_moves", "only_move", "gap", "spread", "forced"],
+            "properties": {"score": {"type": "number", "minimum": 0, "maximum": 1}, "good_moves": {"type": "integer"}, "only_move": {"type": "boolean"}, "obvious": {"type": "boolean"}}
+          },
+          "in_book": {"type": "boolean"},
+          "phase": {"enum": ["opening", "middlegame", "endgame"]},
+          "tags": {"type": "array", "items": {"enum": ["inaccuracy", "mistake", "blunder", "only_move", "missed_only_move", "novelty", "clock_adjustment", "long_think", "critical"]}}
+        }
+      }
+    },
+    "critical_moments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["ply", "score", "facts", "narrative"],
+        "properties": {
+          "ply": {"type": "integer"},
+          "score": {"type": "object", "required": ["total", "swing", "time", "difficulty"]},
+          "facts": {"type": "object", "description": "exactly what the narrator was given"},
+          "narrative": {
+            "type": "object",
+            "required": ["headline", "text", "source"],
+            "properties": {"headline": {"type": "string"}, "text": {"type": "string"}, "source": {"enum": ["template", "claude"]}, "model": {"type": ["string", "null"]}}
+          }
+        }
+      }
+    },
+    "summary": {"type": "object", "required": ["novelty", "longest_think", "critical_count", "players"]}
+  }
+}
