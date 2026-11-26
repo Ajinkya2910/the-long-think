@@ -106,6 +106,8 @@ function render(game) {
       h('div', { class: 'card chart-card' },
         h('div', { class: 'chart-head' }, h('h2', {}, 'Clock'), h('div', { class: 'legend' }, legendP('white'), legendP('black'))),
         clockEl, tableBtn, tableWrap),
+      h('div', { class: 'section-h' }, h('h2', {}, 'Patterns in this game'), h('span', { class: 'muted' }, 'Click a move to load it on the board')),
+      h('div', { class: 'events', id: 'events' }),
       h('div', { class: 'section-h' }, h('h2', {}, 'Critical moments'), h('span', { class: 'muted' }, 'Click a card to load it on the board')),
       h('div', { class: 'moments', id: 'moments' }),
     ),
@@ -233,6 +235,9 @@ function render(game) {
       h('td', {}, evalText(m.eval_after)), h('td', {}, m.top_lines[0]?.san || '—'), h('td', {}, m.wp_loss.toFixed(1))))),
   ));
 
+  // ---------- patterns in this game ----------
+  renderEvents(game, $('#events'), (ply) => { go(ply + 1); scrollTo({ top: 0, behavior: 'smooth' }); });
+
   // ---------- critical moment cards ----------
   const mom = $('#moments');
   if (!game.critical_moments.length) mom.append(h('p', { class: 'muted' }, 'No critical moments detected.'));
@@ -270,6 +275,60 @@ function render(game) {
 
   const startPly = parseInt(params.get('ply') ?? '', 10);
   go(Number.isFinite(startPly) ? startPly : (game.critical_moments[0] ? 0 : 0));
+}
+
+function renderEvents(game, el, jump) {
+  const ev = game.summary.events;
+  if (!ev) return;
+  const name = (side) => shortName(game.players[side]);
+  const mv = (ply, label) => h('button', { class: 'mv', onclick: () => jump(ply) }, label);
+  const gap = (g) => `${dur(Math.abs(g))} ${g >= 0 ? 'ahead' : 'behind'}`;
+  const pawns = (v) => (v == null ? '—' : `${v > 0 ? '+' : ''}${v.toFixed(2)}`);
+
+  // 1. reactions
+  const rx = h('div', { class: 'card event-card' }, h('div', { class: 'eyebrow' }, 'Reaction time'), h('h3', {}, 'Answering a surprise'));
+  if (!ev.reactions.length) rx.append(h('p', { class: 'lead' }, 'No novelty or classified error to react to in this game.'));
+  else rx.append(h('ul', {}, ...ev.reactions.map((r) => {
+    const kind = r.trigger_kinds.includes('novelty') ? `${name(r.trigger_side)}’s novelty` : `${name(r.trigger_side)}’s ${r.trigger_kinds[0]}`;
+    return h('li', {},
+      h('div', { class: 'big' }, r.spent != null ? dur(r.spent) : '—', r.ratio != null ? h('span', { class: 'muted', style: 'font-size:14px;font-family:var(--sans)' }, `  ${r.ratio}× usual`) : null),
+      h('div', {}, 'After ', mv(r.trigger_ply, r.trigger_label), ` (${kind}), ${name(r.response_side)} answered with `, mv(r.response_ply, r.response_label),
+        `. Usual think in this game: ${dur(r.usual)}.`));
+  })));
+
+  // 2. prep payoff
+  const pp = ev.prep_payoff;
+  const pc = h('div', { class: 'card event-card' }, h('div', { class: 'eyebrow' }, 'Opening preparation'), h('h3', {}, 'Did the prep pay off?'));
+  if (!pp) pc.append(h('p', { class: 'lead' }, 'The game never left the masters database (or book data is unavailable).'));
+  else {
+    const me = pp.player_side, other = me === 'white' ? 'black' : 'white';
+    const ch = pp.win_chance_change;
+    const verdict = Math.abs(ch) < 3 ? 'The position barely moved' : ch > 0 ? `${name(me)}’s winning chances rose ${ch.toFixed(0)} pts` : `${name(me)}’s winning chances fell ${Math.abs(ch).toFixed(0)} pts`;
+    const clockMove = pp.clock_gap_after - pp.clock_gap_before;
+    pc.append(
+      h('p', { class: 'lead' }, `${name(me)} left theory with `, mv(pp.novelty_ply, pp.novelty_label), `. Compared with `, mv(pp.end_ply, pp.end_label),
+        `, ${pp.moves_measured} moves later${pp.truncated ? ' (the game ended)' : ''}, from ${name(me)}’s side:`),
+      h('table', { class: 'cmp' },
+        h('thead', {}, h('tr', {}, h('th', {}, ''), h('th', {}, 'At novelty'), h('th', {}, `+${pp.moves_measured} moves`))),
+        h('tbody', {},
+          h('tr', {}, h('td', {}, 'Engine eval'), h('td', {}, pawns(pp.eval_before)), h('td', {}, pawns(pp.eval_after))),
+          h('tr', {}, h('td', {}, 'Winning chances'), h('td', {}, `${pp.win_chance_before}%`), h('td', {}, `${pp.win_chance_after}%`)),
+          h('tr', {}, h('td', {}, `${name(me)} clock`), h('td', {}, clock(pp.clock_before[me])), h('td', {}, clock(pp.clock_after[me]))),
+          h('tr', {}, h('td', {}, `${name(other)} clock`), h('td', {}, clock(pp.clock_before[other])), h('td', {}, clock(pp.clock_after[other]))),
+          h('tr', {}, h('td', {}, 'Clock gap'), h('td', {}, gap(pp.clock_gap_before)), h('td', {}, gap(pp.clock_gap_after))))),
+      h('p', { class: 'lead' }, `${verdict}. On the clock, ${name(me)} ${clockMove >= 0 ? 'gained' : 'lost'} ${dur(Math.abs(clockMove))} relative to ${name(other)}.`));
+  }
+
+  // 3. missed chances
+  const mc = h('div', { class: 'card event-card' }, h('div', { class: 'eyebrow' }, 'Missed chances'), h('h3', {}, 'Errors that went unpunished'));
+  const th = ev.params || {};
+  if (!ev.missed_chances.length) mc.append(h('p', { class: 'lead' }, `None. No error handed over ${th.missed_chance_min_gift ?? 10}+ winning-chance points and then got ${Math.round((th.missed_chance_give_back ?? 0.5) * 100)}% of it straight back.`));
+  else mc.append(h('ul', {}, ...ev.missed_chances.map((m) => h('li', {},
+    h('div', { class: 'big' }, `${m.gift.toFixed(0)} → ${m.given_back.toFixed(0)} pts`),
+    h('div', {}, mv(m.error_ply, m.error_label), ` (${name(m.error_side)}) handed over ${m.gift.toFixed(0)} winning-chance points; `, mv(m.reply_ply, m.reply_label),
+      ` gave back ${m.given_back.toFixed(0)}. The engine’s reply was ${m.best_reply ?? '—'}${m.best_reply_eval != null ? ` (${pawns(m.best_reply_eval)})` : ''}.`)))));
+
+  el.append(rx, pc, mc);
 }
 
 function stat(label, value, sub) {

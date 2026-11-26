@@ -50,7 +50,7 @@ def main(argv: list[str] | None = None) -> None:
             if args.game and g.game_id not in args.game and existing.exists():
                 doc = json.loads(existing.read_text())
                 from .patterns import game_summary
-                doc["summary"] = game_summary(doc)
+                doc["summary"] = game_summary(doc, cfg.raw.get("patterns"))
                 docs.append(doc)
                 continue
             docs.append(analyse_game(cfg, cache, engine, g, skip_opening=args.skip_opening))

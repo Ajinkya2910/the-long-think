@@ -74,6 +74,7 @@ Results are cached by a hash of the facts, so you pay once per moment. Without a
 | `[difficulty]` | "good move" window and "only move" gap, in win% points; discount for recaptures / check evasions |
 | `[classification]` | inaccuracy / mistake / blunder thresholds (win% lost, Lichess-style) |
 | `[critical]` | number of moments, minimum spacing, weights for eval swing / time / difficulty, novelty bonus |
+| `[patterns]` | prep-payoff horizon, missed-chance thresholds |
 | `[narrative]` | on/off, model, effort |
 
 Secrets come only from env vars: `ANTHROPIC_API_KEY`, `LICHESS_TOKEN`, plus `STOCKFISH_PATH` and `ENGINE_DEPTH` overrides.
@@ -90,6 +91,12 @@ Secrets come only from env vars: `ANTHROPIC_API_KEY`, `LICHESS_TOKEN`, plus `STO
 - **Difficulty** (0–1): half "how few good moves exist" (from 5 engine lines), half "how costly the second-best move is".
   Forced moves score 0. Recaptures and check evasions are discounted.
 - **Critical moments**: `0.5·swing + 0.3·time + 0.2·difficulty (+0.15 for the novelty)`, top 5, at least 4 plies apart.
+- **Reaction time** (`storyteller/events.py`): seconds spent on the move right after the opponent's novelty or classified
+  error, compared with that player's median non-book think in the same game.
+- **Prep payoff**: evaluation, winning chances and both clocks just before the novelty vs 10 full moves later
+  (or the last move, if the game ends sooner), from the side that left theory.
+- **Missed chances**: the opponent's move hands over at least 10 winning-chance points, and the reply gives back
+  at least half of them. Thresholds are in `[patterns]`.
 - **Phases**: opening = book moves; endgame = 6 or fewer pieces besides kings and pawns; middlegame otherwise.
 
 ## Project layout

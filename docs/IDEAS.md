@@ -2,7 +2,7 @@
 
 Already built: per-game eval / time / clock charts, novelty detection, critical moments, fact-checked narratives,
 cross-game player profiles (time by phase, accuracy vs clock, accuracy vs think length, hard vs easy positions),
-auto-generated insights, and the **Moves map** scatter (every move, any two axes, filters, click-through).
+auto-generated insights, **reaction time to surprises**, **prep payoff**, **missed chances**, and the **Moves map** scatter (every move, any two axes, filters, click-through).
 
 Everything below follows the same rule: compute it deterministically first, then let the UI or the narrator describe it.
 

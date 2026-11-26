@@ -90,7 +90,7 @@
           },
           "in_book": {"type": "boolean"},
           "phase": {"enum": ["opening", "middlegame", "endgame"]},
-          "tags": {"type": "array", "items": {"enum": ["inaccuracy", "mistake", "blunder", "only_move", "missed_only_move", "novelty", "clock_adjustment", "long_think", "critical"]}}
+          "tags": {"type": "array", "items": {"enum": ["inaccuracy", "mistake", "blunder", "only_move", "missed_only_move", "novelty", "clock_adjustment", "long_think", "critical", "missed_chance"]}}
         }
       }
     },
@@ -111,6 +111,20 @@
         }
       }
     },
-    "summary": {"type": "object", "required": ["novelty", "longest_think", "critical_count", "players"]}
+    "summary": {
+      "type": "object",
+      "required": ["novelty", "longest_think", "critical_count", "players", "events"],
+      "properties": {
+        "events": {
+          "type": "object",
+          "required": ["reactions", "usual_think", "prep_payoff", "missed_chances"],
+          "properties": {
+            "reactions": {"type": "array", "items": {"type": "object", "required": ["trigger_ply", "trigger_kinds", "response_ply", "response_side", "spent", "usual", "ratio"]}},
+            "prep_payoff": {"type": ["object", "null"], "required": ["player_side", "novelty_ply", "end_ply", "win_chance_change", "clock_gap_before", "clock_gap_after", "truncated"]},
+            "missed_chances": {"type": "array", "items": {"type": "object", "required": ["error_ply", "gift", "reply_ply", "given_back", "best_reply"]}}
+          }
+        }
+      }
+    }
   }
 }

@@ -10,7 +10,7 @@
    "id": "L3j03TZq",
    "name": "Game 2",
    "startsAt": 1795615200000,
-   "finished": false
+   "finished": true
   },
   {
    "id": "fnmEB1kH",
@@ -218,6 +218,86 @@
     50.0,
     50.0
    ]
+  },
+  {
+   "id": "game-02",
+   "round": "2.1",
+   "date": "2026.11.11",
+   "result": "1/2-1/2",
+   "white": {
+    "name": "Gukesh D",
+    "elo": "2710",
+    "short": "Gukesh",
+    "slot": 1
+   },
+   "black": {
+    "name": "Sindarov, Javokhir",
+    "elo": "2782",
+    "short": "Sindarov",
+    "slot": 2
+   },
+   "eco": "D02",
+   "opening_name": "Queen's Pawn Game: London System",
+   "plies": 40,
+   "novelty": {
+    "ply": 21,
+    "label": "11...Qd8",
+    "player": "Sindarov, Javokhir",
+    "side": "black"
+   },
+   "longest_think": {
+    "ply": 30,
+    "label": "16.f3",
+    "seconds": 1769
+   },
+   "critical_count": 5,
+   "accuracy": {
+    "white": 97.5,
+    "black": 97.2
+   },
+   "sparkline": [
+    52.7,
+    52.0,
+    52.5,
+    52.3,
+    51.8,
+    50.5,
+    51.1,
+    51.2,
+    51.3,
+    50.7,
+    51.4,
+    50.9,
+    51.4,
+    50.6,
+    51.3,
+    51.2,
+    51.5,
+    50.9,
+    50.8,
+    50.4,
+    50.5,
+    50.5,
+    50.8,
+    51.1,
+    51.8,
+    51.0,
+    52.1,
+    51.2,
+    50.9,
+    50.3,
+    51.0,
+    50.1,
+    51.3,
+    50.0,
+    50.5,
+    50.3,
+    51.3,
+    50.0,
+    50.7,
+    50.7,
+    51.4
+   ]
   }
  ],
  "patterns": {
@@ -226,24 +306,24 @@
     "name": "Sindarov, Javokhir",
     "short": "Sindarov",
     "slot": 2,
-    "games": 1,
-    "points": 0.5,
-    "accuracy": 98.7,
+    "games": 2,
+    "points": 1.0,
+    "accuracy": 98.3,
     "time_share_by_phase": {
-     "opening": 5.1,
-     "middlegame": 94.9,
+     "opening": 9.2,
+     "middlegame": 90.8,
      "endgame": 0.0
     },
     "time_by_phase": {
-     "opening": 317,
-     "middlegame": 5932,
+     "opening": 787,
+     "middlegame": 7776,
      "endgame": 0
     },
     "accuracy_by_clock": [
      {
       "bucket": "> 60 min",
-      "moves": 6,
-      "accuracy": 98.0
+      "moves": 16,
+      "accuracy": 97.5
      },
      {
       "bucket": "30–60 min",
@@ -264,18 +344,18 @@
     "accuracy_by_think": [
      {
       "bucket": "< 1 min",
-      "moves": 13,
-      "accuracy": 99.8
+      "moves": 17,
+      "accuracy": 99.2
      },
      {
       "bucket": "1–5 min",
-      "moves": 6,
-      "accuracy": 99.3
+      "moves": 10,
+      "accuracy": 98.2
      },
      {
       "bucket": "5–15 min",
-      "moves": 3,
-      "accuracy": 95.4
+      "moves": 5,
+      "accuracy": 96.6
      },
      {
       "bucket": "> 15 min",
@@ -288,11 +368,11 @@
      "accuracy": 100.0
     },
     "accuracy_easy": {
-     "moves": 21,
-     "accuracy": 98.5
+     "moves": 31,
+     "accuracy": 98.1
     },
-    "novelties_played": 0,
-    "avg_time_before_novelty": 317,
+    "novelties_played": 1,
+    "avg_time_before_novelty": 394,
     "per_game": [
      {
       "game_id": "game-01",
@@ -306,36 +386,105 @@
        "seconds": 1372
       },
       "time_trouble_moves": 0
+     },
+     {
+      "game_id": "game-02",
+      "color": "black",
+      "accuracy": 97.2,
+      "acpl": 7,
+      "time_used": 2314,
+      "longest_think": {
+       "ply": 23,
+       "label": "12...Rc8",
+       "seconds": 643
+      },
+      "time_trouble_moves": 0
      }
-    ]
+    ],
+    "reactions": {
+     "to_novelty": {
+      "count": 1,
+      "avg_spent": 1372,
+      "avg_ratio": 24.9
+     },
+     "to_errors": null,
+     "items": [
+      {
+       "trigger_ply": 25,
+       "trigger_label": "13...Bd7",
+       "trigger_kinds": [
+        "novelty"
+       ],
+       "trigger_side": "black",
+       "response_ply": 26,
+       "response_label": "14.c4",
+       "response_side": "white",
+       "spent": 1372,
+       "usual": 55,
+       "ratio": 24.9,
+       "response_classification": null,
+       "game_id": "game-01"
+      }
+     ]
+    },
+    "prep_payoffs": [
+     {
+      "player_side": "black",
+      "novelty_ply": 21,
+      "novelty_label": "11...Qd8",
+      "end_ply": 39,
+      "end_label": "20...Nf6",
+      "moves_measured": 10,
+      "truncated": true,
+      "eval_before": -0.05,
+      "eval_after": -0.15,
+      "win_chance_before": 49.5,
+      "win_chance_after": 48.6,
+      "win_chance_change": -0.9,
+      "clock_before": {
+       "black": 6730,
+       "white": 6195
+      },
+      "clock_after": {
+       "black": 4886,
+       "white": 2533
+      },
+      "clock_gap_before": 535,
+      "clock_gap_after": 2353,
+      "game_id": "game-02"
+     }
+    ],
+    "missed_chances": 0,
+    "opponent_missed_chances": 0,
+    "errors_punished": 0
    },
    "Gukesh D": {
     "name": "Gukesh D",
     "short": "Gukesh",
     "slot": 1,
-    "games": 1,
-    "points": 0.5,
-    "accuracy": 98.8,
+    "games": 2,
+    "points": 1.0,
+    "accuracy": 98.5,
     "time_share_by_phase": {
-     "opening": 21.9,
-     "middlegame": 78.1,
+     "opening": 21.7,
+     "middlegame": 78.3,
      "endgame": 0.0
     },
     "time_by_phase": {
-     "opening": 1515,
-     "middlegame": 5411,
+     "opening": 2520,
+     "middlegame": 9073,
      "endgame": 0
     },
     "accuracy_by_clock": [
      {
       "bucket": "> 60 min",
-      "moves": 5,
-      "accuracy": 96.6
+      "moves": 10,
+      "accuracy": 97.2
      },
      {
       "bucket": "30–60 min",
-      "moves": 0,
-      "accuracy": null
+      "moves": 4,
+      "accuracy": 97.2
      },
      {
       "bucket": "10–30 min",
@@ -351,23 +500,23 @@
     "accuracy_by_think": [
      {
       "bucket": "< 1 min",
-      "moves": 15,
+      "moves": 16,
       "accuracy": 99.3
      },
      {
       "bucket": "1–5 min",
-      "moves": 5,
-      "accuracy": 99.0
+      "moves": 10,
+      "accuracy": 97.7
      },
      {
       "bucket": "5–15 min",
-      "moves": 3,
-      "accuracy": 96.8
+      "moves": 5,
+      "accuracy": 98.1
      },
      {
       "bucket": "> 15 min",
-      "moves": 2,
-      "accuracy": 97.8
+      "moves": 3,
+      "accuracy": 97.1
      }
     ],
     "accuracy_hard": {
@@ -375,11 +524,11 @@
      "accuracy": 100.0
     },
     "accuracy_easy": {
-     "moves": 24,
-     "accuracy": 98.7
+     "moves": 33,
+     "accuracy": 98.4
     },
     "novelties_played": 1,
-    "avg_time_before_novelty": 1515,
+    "avg_time_before_novelty": 1260,
     "per_game": [
      {
       "game_id": "game-01",
@@ -393,40 +542,109 @@
        "seconds": 2174
       },
       "time_trouble_moves": 3
+     },
+     {
+      "game_id": "game-02",
+      "color": "white",
+      "accuracy": 97.5,
+      "acpl": 6,
+      "time_used": 4667,
+      "longest_think": {
+       "ply": 30,
+       "label": "16.f3",
+       "seconds": 1769
+      },
+      "time_trouble_moves": 0
      }
-    ]
+    ],
+    "reactions": {
+     "to_novelty": {
+      "count": 1,
+      "avg_spent": 837,
+      "avg_ratio": 5.5
+     },
+     "to_errors": null,
+     "items": [
+      {
+       "trigger_ply": 21,
+       "trigger_label": "11...Qd8",
+       "trigger_kinds": [
+        "novelty"
+       ],
+       "trigger_side": "black",
+       "response_ply": 22,
+       "response_label": "12.O-O",
+       "response_side": "white",
+       "spent": 837,
+       "usual": 151,
+       "ratio": 5.5,
+       "response_classification": null,
+       "game_id": "game-02"
+      }
+     ]
+    },
+    "prep_payoffs": [
+     {
+      "player_side": "black",
+      "novelty_ply": 25,
+      "novelty_label": "13...Bd7",
+      "end_ply": 44,
+      "end_label": "23.axb3",
+      "moves_measured": 10,
+      "truncated": false,
+      "eval_before": -0.03,
+      "eval_after": -0.13,
+      "win_chance_before": 49.7,
+      "win_chance_after": 48.8,
+      "win_chance_change": -0.9,
+      "clock_before": {
+       "black": 5685,
+       "white": 6883
+      },
+      "clock_after": {
+       "black": 946,
+       "white": 1642
+      },
+      "clock_gap_before": -1198,
+      "clock_gap_after": -696,
+      "game_id": "game-01"
+     }
+    ],
+    "missed_chances": 0,
+    "opponent_missed_chances": 0,
+    "errors_punished": 0
    }
   },
   "insights": [
    {
     "player": "Sindarov, Javokhir",
     "kind": "time_budget",
-    "text": "95% of Sindarov's thinking time went into the middlegame.",
+    "text": "91% of Sindarov's thinking time went into the middlegame.",
     "evidence": {
-     "opening": 5.1,
-     "middlegame": 94.9,
+     "opening": 9.2,
+     "middlegame": 90.8,
      "endgame": 0.0
     }
    },
    {
     "player": "Sindarov, Javokhir",
     "kind": "long_thinks",
-    "text": "After thinks of over 15 minutes, Sindarov averaged 96% accuracy (vs 100% on moves under a minute).",
+    "text": "After thinks of over 15 minutes, Sindarov averaged 96% accuracy (vs 99% on moves under a minute).",
     "evidence": [
      {
       "bucket": "< 1 min",
-      "moves": 13,
-      "accuracy": 99.8
+      "moves": 17,
+      "accuracy": 99.2
      },
      {
       "bucket": "1–5 min",
-      "moves": 6,
-      "accuracy": 99.3
+      "moves": 10,
+      "accuracy": 98.2
      },
      {
       "bucket": "5–15 min",
-      "moves": 3,
-      "accuracy": 95.4
+      "moves": 5,
+      "accuracy": 96.6
      },
      {
       "bucket": "> 15 min",
@@ -445,18 +663,58 @@
       "accuracy": 100.0
      },
      "easy": {
-      "moves": 21,
-      "accuracy": 98.5
+      "moves": 31,
+      "accuracy": 98.1
      }
     }
    },
    {
     "player": "Sindarov, Javokhir",
-    "kind": "prep",
-    "text": "Sindarov used on average 5m 17s before the game left known theory.",
+    "kind": "reaction_novelty",
+    "text": "Facing the opponent's novelty, Sindarov thought 22m 52s, 24.9× Sindarov's usual think in that game.",
     "evidence": {
-     "avg_seconds": 317,
-     "games": 1
+     "count": 1,
+     "avg_spent": 1372,
+     "avg_ratio": 24.9
+    }
+   },
+   {
+    "player": "Sindarov, Javokhir",
+    "kind": "prep_payoff",
+    "text": "Game 2: 10 moves (game ended) after Sindarov left theory with 11...Qd8, the position barely moved; on the clock Sindarov went from 8m 55s ahead to 39m 13s ahead.",
+    "evidence": {
+     "player_side": "black",
+     "novelty_ply": 21,
+     "novelty_label": "11...Qd8",
+     "end_ply": 39,
+     "end_label": "20...Nf6",
+     "moves_measured": 10,
+     "truncated": true,
+     "eval_before": -0.05,
+     "eval_after": -0.15,
+     "win_chance_before": 49.5,
+     "win_chance_after": 48.6,
+     "win_chance_change": -0.9,
+     "clock_before": {
+      "black": 6730,
+      "white": 6195
+     },
+     "clock_after": {
+      "black": 4886,
+      "white": 2533
+     },
+     "clock_gap_before": 535,
+     "clock_gap_after": 2353,
+     "game_id": "game-02"
+    }
+   },
+   {
+    "player": "Sindarov, Javokhir",
+    "kind": "prep",
+    "text": "Sindarov used on average 6m 34s before the game left known theory.",
+    "evidence": {
+     "avg_seconds": 394,
+     "games": 2
     }
    },
    {
@@ -464,67 +722,85 @@
     "kind": "time_budget",
     "text": "78% of Gukesh's thinking time went into the middlegame.",
     "evidence": {
-     "opening": 21.9,
-     "middlegame": 78.1,
+     "opening": 21.7,
+     "middlegame": 78.3,
      "endgame": 0.0
     }
    },
    {
     "player": "Gukesh D",
-    "kind": "time_pressure",
-    "text": "Gukesh's accuracy rose from 97% with > 60 min on the clock to 100% with < 10 min.",
-    "evidence": [
-     {
-      "bucket": "> 60 min",
-      "moves": 5,
-      "accuracy": 96.6
-     },
-     {
-      "bucket": "10–30 min",
-      "moves": 8,
-      "accuracy": 98.3
-     },
-     {
-      "bucket": "< 10 min",
-      "moves": 13,
-      "accuracy": 100.0
-     }
-    ]
-   },
-   {
-    "player": "Gukesh D",
     "kind": "long_thinks",
-    "text": "After thinks of over 15 minutes, Gukesh averaged 98% accuracy (vs 99% on moves under a minute).",
+    "text": "After thinks of over 15 minutes, Gukesh averaged 97% accuracy (vs 99% on moves under a minute).",
     "evidence": [
      {
       "bucket": "< 1 min",
-      "moves": 15,
+      "moves": 16,
       "accuracy": 99.3
      },
      {
       "bucket": "1–5 min",
-      "moves": 5,
-      "accuracy": 99.0
+      "moves": 10,
+      "accuracy": 97.7
      },
      {
       "bucket": "5–15 min",
-      "moves": 3,
-      "accuracy": 96.8
+      "moves": 5,
+      "accuracy": 98.1
      },
      {
       "bucket": "> 15 min",
-      "moves": 2,
-      "accuracy": 97.8
+      "moves": 3,
+      "accuracy": 97.1
      }
     ]
    },
    {
     "player": "Gukesh D",
-    "kind": "prep",
-    "text": "Gukesh used on average 25m 15s before the game left known theory.",
+    "kind": "reaction_novelty",
+    "text": "Facing the opponent's novelty, Gukesh thought 13m 57s, 5.5× Gukesh's usual think in that game.",
     "evidence": {
-     "avg_seconds": 1515,
-     "games": 1
+     "count": 1,
+     "avg_spent": 837,
+     "avg_ratio": 5.5
+    }
+   },
+   {
+    "player": "Gukesh D",
+    "kind": "prep_payoff",
+    "text": "Game 1: 10 moves after Gukesh left theory with 13...Bd7, the position barely moved; on the clock Gukesh went from 19m 58s behind to 11m 36s behind.",
+    "evidence": {
+     "player_side": "black",
+     "novelty_ply": 25,
+     "novelty_label": "13...Bd7",
+     "end_ply": 44,
+     "end_label": "23.axb3",
+     "moves_measured": 10,
+     "truncated": false,
+     "eval_before": -0.03,
+     "eval_after": -0.13,
+     "win_chance_before": 49.7,
+     "win_chance_after": 48.8,
+     "win_chance_change": -0.9,
+     "clock_before": {
+      "black": 5685,
+      "white": 6883
+     },
+     "clock_after": {
+      "black": 946,
+      "white": 1642
+     },
+     "clock_gap_before": -1198,
+     "clock_gap_after": -696,
+     "game_id": "game-01"
+    }
+   },
+   {
+    "player": "Gukesh D",
+    "kind": "prep",
+    "text": "Gukesh used on average 21m 00s before the game left known theory.",
+    "evidence": {
+     "avg_seconds": 1260,
+     "games": 2
     }
    }
   ],
@@ -1683,8 +1959,608 @@
     398,
     false,
     null
+   ],
+   [
+    "game-02",
+    0,
+    "1.d4",
+    "Gukesh D",
+    "white",
+    7,
+    0.65,
+    97.1,
+    "opening",
+    0.011,
+    7200,
+    true,
+    null
+   ],
+   [
+    "game-02",
+    1,
+    "1...d5",
+    "Sindarov, Javokhir",
+    "black",
+    26,
+    0.46,
+    98.0,
+    "opening",
+    0.002,
+    7200,
+    true,
+    null
+   ],
+   [
+    "game-02",
+    2,
+    "2.Nf3",
+    "Gukesh D",
+    "white",
+    9,
+    0.0,
+    100.0,
+    "opening",
+    0.0,
+    7193,
+    true,
+    null
+   ],
+   [
+    "game-02",
+    3,
+    "2...Nf6",
+    "Sindarov, Javokhir",
+    "black",
+    19,
+    0.0,
+    100.0,
+    "opening",
+    0.0,
+    7174,
+    true,
+    null
+   ],
+   [
+    "game-02",
+    4,
+    "3.Bf4",
+    "Gukesh D",
+    "white",
+    7,
+    1.29,
+    94.4,
+    "opening",
+    0.021,
+    7184,
+    true,
+    null
+   ],
+   [
+    "game-02",
+    5,
+    "3...c5",
+    "Sindarov, Javokhir",
+    "black",
+    51,
+    0.0,
+    100.0,
+    "opening",
+    0.007,
+    7155,
+    true,
+    null
+   ],
+   [
+    "game-02",
+    6,
+    "4.e3",
+    "Gukesh D",
+    "white",
+    8,
+    0.0,
+    100.0,
+    "opening",
+    0.028,
+    7177,
+    true,
+    null
+   ],
+   [
+    "game-02",
+    7,
+    "4...e6",
+    "Sindarov, Javokhir",
+    "black",
+    35,
+    0.0,
+    100.0,
+    "opening",
+    0.002,
+    7104,
+    true,
+    null
+   ],
+   [
+    "game-02",
+    8,
+    "5.Nbd2",
+    "Gukesh D",
+    "white",
+    51,
+    0.0,
+    100.0,
+    "opening",
+    0.018,
+    7169,
+    true,
+    null
+   ],
+   [
+    "game-02",
+    9,
+    "5...Nc6",
+    "Sindarov, Javokhir",
+    "black",
+    89,
+    0.64,
+    97.1,
+    "opening",
+    0.014,
+    7069,
+    true,
+    null
+   ],
+   [
+    "game-02",
+    10,
+    "6.c3",
+    "Gukesh D",
+    "white",
+    16,
+    0.0,
+    100.0,
+    "opening",
+    0.025,
+    7118,
+    true,
+    null
+   ],
+   [
+    "game-02",
+    11,
+    "6...Be7",
+    "Sindarov, Javokhir",
+    "black",
+    14,
+    0.46,
+    98.0,
+    "opening",
+    0.016,
+    6980,
+    true,
+    null
+   ],
+   [
+    "game-02",
+    12,
+    "7.Ne5",
+    "Gukesh D",
+    "white",
+    11,
+    0.74,
+    96.7,
+    "opening",
+    0.009,
+    7102,
+    true,
+    null
+   ],
+   [
+    "game-02",
+    13,
+    "7...Qb6",
+    "Sindarov, Javokhir",
+    "black",
+    108,
+    0.65,
+    97.1,
+    "opening",
+    0.014,
+    6966,
+    true,
+    null
+   ],
+   [
+    "game-02",
+    14,
+    "8.Rb1",
+    "Gukesh D",
+    "white",
+    370,
+    0.0,
+    100.0,
+    "opening",
+    0.051,
+    7091,
+    true,
+    null
+   ],
+   [
+    "game-02",
+    15,
+    "8...Nxe5",
+    "Sindarov, Javokhir",
+    "black",
+    57,
+    0.27,
+    98.8,
+    "opening",
+    0.018,
+    6858,
+    true,
+    null
+   ],
+   [
+    "game-02",
+    16,
+    "9.Bxe5",
+    "Gukesh D",
+    "white",
+    199,
+    0.0,
+    100.0,
+    "opening",
+    0.103,
+    6721,
+    true,
+    null
+   ],
+   [
+    "game-02",
+    17,
+    "9...Bd7",
+    "Sindarov, Javokhir",
+    "black",
+    40,
+    0.0,
+    100.0,
+    "opening",
+    0.012,
+    6801,
+    true,
+    null
+   ],
+   [
+    "game-02",
+    18,
+    "10.a4",
+    "Gukesh D",
+    "white",
+    73,
+    0.0,
+    100.0,
+    "opening",
+    0.012,
+    6522,
+    true,
+    null
+   ],
+   [
+    "game-02",
+    19,
+    "10...O-O",
+    "Sindarov, Javokhir",
+    "black",
+    31,
+    0.18,
+    99.2,
+    "opening",
+    0.0,
+    6761,
+    true,
+    null
+   ],
+   [
+    "game-02",
+    20,
+    "11.Bd3",
+    "Gukesh D",
+    "white",
+    254,
+    0.0,
+    100.0,
+    "opening",
+    0.009,
+    6449,
+    true,
+    null
+   ],
+   [
+    "game-02",
+    21,
+    "11...Qd8",
+    "Sindarov, Javokhir",
+    "black",
+    161,
+    0.37,
+    98.4,
+    "middlegame",
+    0.012,
+    6730,
+    false,
+    null
+   ],
+   [
+    "game-02",
+    22,
+    "12.O-O",
+    "Gukesh D",
+    "white",
+    837,
+    0.0,
+    100.0,
+    "middlegame",
+    0.009,
+    6195,
+    false,
+    null
+   ],
+   [
+    "game-02",
+    23,
+    "12...Rc8",
+    "Sindarov, Javokhir",
+    "black",
+    643,
+    0.65,
+    97.1,
+    "middlegame",
+    0.002,
+    6569,
+    false,
+    null
+   ],
+   [
+    "game-02",
+    24,
+    "13.Ra1",
+    "Gukesh D",
+    "white",
+    399,
+    0.0,
+    100.0,
+    "middlegame",
+    0.011,
+    5358,
+    false,
+    null
+   ],
+   [
+    "game-02",
+    25,
+    "13...Be8",
+    "Sindarov, Javokhir",
+    "black",
+    271,
+    1.11,
+    95.1,
+    "middlegame",
+    0.016,
+    5926,
+    false,
+    null
+   ],
+   [
+    "game-02",
+    26,
+    "14.Qe2",
+    "Gukesh D",
+    "white",
+    141,
+    0.92,
+    96.0,
+    "middlegame",
+    0.009,
+    4959,
+    false,
+    null
+   ],
+   [
+    "game-02",
+    27,
+    "14...Nd7",
+    "Sindarov, Javokhir",
+    "black",
+    472,
+    0.0,
+    100.0,
+    "middlegame",
+    0.014,
+    5655,
+    false,
+    null
+   ],
+   [
+    "game-02",
+    28,
+    "15.Bg3",
+    "Gukesh D",
+    "white",
+    65,
+    0.64,
+    97.2,
+    "middlegame",
+    0.007,
+    4818,
+    false,
+    null
+   ],
+   [
+    "game-02",
+    29,
+    "15...f5",
+    "Sindarov, Javokhir",
+    "black",
+    15,
+    0.0,
+    100.0,
+    "middlegame",
+    0.007,
+    5183,
+    false,
+    null
+   ],
+   [
+    "game-02",
+    30,
+    "16.f3",
+    "Gukesh D",
+    "white",
+    1769,
+    0.92,
+    95.9,
+    "middlegame",
+    0.005,
+    4753,
+    false,
+    null
+   ],
+   [
+    "game-02",
+    31,
+    "16...Nf6",
+    "Sindarov, Javokhir",
+    "black",
+    150,
+    1.2,
+    94.8,
+    "middlegame",
+    0.012,
+    5168,
+    false,
+    null
+   ],
+   [
+    "game-02",
+    32,
+    "17.Be5",
+    "Gukesh D",
+    "white",
+    221,
+    1.29,
+    94.4,
+    "middlegame",
+    0.007,
+    2984,
+    false,
+    null
+   ],
+   [
+    "game-02",
+    33,
+    "17...Nd7",
+    "Sindarov, Javokhir",
+    "black",
+    89,
+    0.55,
+    97.6,
+    "middlegame",
+    0.002,
+    5018,
+    false,
+    null
+   ],
+   [
+    "game-02",
+    34,
+    "18.Bg3",
+    "Gukesh D",
+    "white",
+    60,
+    0.0,
+    100.0,
+    "middlegame",
+    0.264,
+    2763,
+    false,
+    null
+   ],
+   [
+    "game-02",
+    35,
+    "18...Nf6",
+    "Sindarov, Javokhir",
+    "black",
+    16,
+    1.01,
+    95.5,
+    "middlegame",
+    0.002,
+    4929,
+    false,
+    null
+   ],
+   [
+    "game-02",
+    36,
+    "19.Be5",
+    "Gukesh D",
+    "white",
+    151,
+    1.29,
+    94.4,
+    "middlegame",
+    0.016,
+    2703,
+    false,
+    null
+   ],
+   [
+    "game-02",
+    37,
+    "19...Nd7",
+    "Sindarov, Javokhir",
+    "black",
+    16,
+    0.74,
+    96.7,
+    "middlegame",
+    0.009,
+    4913,
+    false,
+    null
+   ],
+   [
+    "game-02",
+    38,
+    "20.Bg3",
+    "Gukesh D",
+    "white",
+    19,
+    0.0,
+    100.0,
+    "middlegame",
+    0.393,
+    2552,
+    false,
+    null
+   ],
+   [
+    "game-02",
+    39,
+    "20...Nf6",
+    "Sindarov, Javokhir",
+    "black",
+    11,
+    0.64,
+    97.1,
+    "middlegame",
+    0.002,
+    4897,
+    false,
+    null
    ]
   ]
  },
- "generated_at": "2026-11-25T03:22:23+00:00"
+ "generated_at": "2026-11-26T00:26:14+00:00"
 }

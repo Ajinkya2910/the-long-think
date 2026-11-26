@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from statistics import mean
 
+from .events import game_events
 from .narrative import fmt_dur
 
 CLOCK_BUCKETS = [("> 60 min", 3600, 10**9), ("30–60 min", 1800, 3600), ("10–30 min", 600, 1800), ("< 10 min", 0, 600)]
@@ -68,7 +69,7 @@ def player_game_stats(doc: dict, side: str) -> dict:
     }
 
 
-def game_summary(doc: dict) -> dict:
+def game_summary(doc: dict, pcfg: dict | None = None, events: dict | None = None) -> dict:
     nov = doc["opening"].get("novelty_ply")
     novelty = None
     if nov is not None and nov < len(doc["moves"]):
@@ -80,6 +81,7 @@ def game_summary(doc: dict) -> dict:
         "novelty": novelty,
         "longest_think": longest,
         "critical_count": len(doc["critical_moments"]),
+        "events": events if events is not None else game_events(doc, pcfg),
         "players": {s: {k: v for k, v in p.items() if k != "_rows"} for s, p in players.items()},
         "_rows": {s: p["_rows"] for s, p in players.items()},
     }
@@ -109,7 +111,7 @@ def match_patterns(docs: list[dict], display: dict) -> dict:
         summ = doc["summary"]
         for side in ("white", "black"):
             name = doc["players"][side]["name"]
-            pr = profiles.setdefault(name, {"name": name, "games": 0, "points": 0.0, "rows": [], "per_game": [], "time_by_phase": {p: 0 for p in PHASES}, "novelties_played": 0, "time_before_novelty": []})
+            pr = profiles.setdefault(name, {"name": name, "games": 0, "points": 0.0, "rows": [], "per_game": [], "time_by_phase": {p: 0 for p in PHASES}, "novelties_played": 0, "time_before_novelty": [], "reactions": [], "payoffs": [], "missed": 0, "punished": 0, "allowed_missed": 0})
             ps = summ["players"][side]
             pr["games"] += 1
             res = doc["result"]
@@ -121,6 +123,20 @@ def match_patterns(docs: list[dict], display: dict) -> dict:
                 pr["novelties_played"] += 1
             if ps["time_before_novelty"] is not None:
                 pr["time_before_novelty"].append(ps["time_before_novelty"])
+            ev = summ.get("events") or {}
+            for r in ev.get("reactions", []):
+                if r["response_side"] == side:
+                    pr["reactions"].append({**r, "game_id": doc["id"]})
+            pp = ev.get("prep_payoff")
+            if pp and pp["player_side"] == side:
+                pr["payoffs"].append({**pp, "game_id": doc["id"]})
+            for mc in ev.get("missed_chances", []):
+                if mc["reply_side"] == side:
+                    pr["missed"] += 1
+                else:
+                    pr["allowed_missed"] += 1
+            errors_by_opp = [r for r in ev.get("reactions", []) if r["response_side"] == side and set(r["trigger_kinds"]) & {"mistake", "blunder"}]
+            pr["punished"] += sum(1 for r in errors_by_opp) - sum(1 for mc in ev.get("missed_chances", []) if mc["reply_side"] == side and mc["error_classification"] in ("mistake", "blunder"))
             pr["per_game"].append({"game_id": doc["id"], "color": side, "accuracy": ps["accuracy"], "acpl": ps["acpl"], "time_used": ps["time_used"], "longest_think": ps["longest_think"], "time_trouble_moves": ps["time_trouble_moves"]})
 
     out = {}
@@ -146,8 +162,30 @@ def match_patterns(docs: list[dict], display: dict) -> dict:
             "novelties_played": pr["novelties_played"],
             "avg_time_before_novelty": round(mean(pr["time_before_novelty"])) if pr["time_before_novelty"] else None,
             "per_game": pr["per_game"],
+            "reactions": _reaction_stats(pr["reactions"]),
+            "prep_payoffs": pr["payoffs"],
+            "missed_chances": pr["missed"],
+            "opponent_missed_chances": pr["allowed_missed"],
+            "errors_punished": max(0, pr["punished"]),
         }
     return {"players": out, "insights": insights(out, docs), "move_columns": MOVE_COLUMNS, "moves": move_rows(docs)}
+
+
+def _reaction_stats(rs: list[dict]) -> dict:
+    def agg(sel):
+        vals = [r for r in sel if r["spent"] is not None]
+        if not vals:
+            return None
+        return {
+            "count": len(vals),
+            "avg_spent": round(mean(r["spent"] for r in vals)),
+            "avg_ratio": round(mean(r["ratio"] for r in vals if r["ratio"] is not None), 1) if any(r["ratio"] is not None for r in vals) else None,
+        }
+    return {
+        "to_novelty": agg([r for r in rs if "novelty" in r["trigger_kinds"]]),
+        "to_errors": agg([r for r in rs if set(r["trigger_kinds"]) - {"novelty"}]),
+        "items": rs,
+    }
 
 
 def insights(players: dict, docs: list[dict]) -> list[dict]:
@@ -171,6 +209,31 @@ def insights(players: dict, docs: list[dict]) -> list[dict]:
             out.append({"player": p["name"], "kind": "long_thinks", "text": f"After thinks of over 15 minutes, {n} averaged {long_b['accuracy']:.0f}% accuracy (vs {quick_b['accuracy']:.0f}% on moves under a minute).", "evidence": thinks})
         if p["accuracy_hard"]["moves"] >= 3 and p["accuracy_easy"]["moves"] >= 3:
             out.append({"player": p["name"], "kind": "difficulty", "text": f"In positions with few good options, {n} scored {p['accuracy_hard']['accuracy']:.0f}% accuracy, vs {p['accuracy_easy']['accuracy']:.0f}% in easier positions.", "evidence": {"hard": p["accuracy_hard"], "easy": p["accuracy_easy"]}})
+        rn = p["reactions"]["to_novelty"]
+        if rn and rn["avg_ratio"] is not None:
+            if rn["count"] == 1:
+                txt = f"Facing the opponent's novelty, {n} thought {fmt_dur(rn['avg_spent'])}, {rn['avg_ratio']}× {n}'s usual think in that game."
+            else:
+                txt = f"Facing {rn['count']} opponent novelties, {n} thought {fmt_dur(rn['avg_spent'])} on average, {rn['avg_ratio']}× {n}'s usual think."
+            out.append({"player": p["name"], "kind": "reaction_novelty", "text": txt, "evidence": rn})
+        re_ = p["reactions"]["to_errors"]
+        if re_ and re_["avg_ratio"] is not None:
+            out.append({"player": p["name"], "kind": "reaction_errors", "text": f"When the opponent slipped, {n} took {fmt_dur(re_['avg_spent'])} on average to answer ({re_['avg_ratio']}× usual), over {re_['count']} move{'s' if re_['count'] != 1 else ''}.", "evidence": re_})
+        for pp in p["prep_payoffs"]:
+            out.append({"player": p["name"], "kind": "prep_payoff", "text": _payoff_text(n, pp), "evidence": pp})
+        if p["missed_chances"]:
+            out.append({"player": p["name"], "kind": "missed_chances", "text": f"{n} let {p['missed_chances']} opponent error{'s' if p['missed_chances'] != 1 else ''} go unpunished.", "evidence": {"missed": p["missed_chances"]}})
         if p["avg_time_before_novelty"] is not None:
             out.append({"player": p["name"], "kind": "prep", "text": f"{n} used on average {fmt_dur(p['avg_time_before_novelty'])} before the game left known theory.", "evidence": {"avg_seconds": p["avg_time_before_novelty"], "games": p["games"]}})
     return out
+
+
+def _payoff_text(n: str, pp: dict) -> str:
+    gap0, gap1 = pp["clock_gap_before"], pp["clock_gap_after"]
+    def gap(g):
+        return f"{fmt_dur(abs(g))} {'ahead' if g >= 0 else 'behind'}"
+    ch = pp["win_chance_change"]
+    pos = "the position barely moved" if abs(ch) < 3 else (f"{n}'s winning chances rose {ch:.0f} pts" if ch > 0 else f"{n}'s winning chances fell {abs(ch):.0f} pts")
+    span = f"{pp['moves_measured']} moves" + (" (game ended)" if pp["truncated"] else "")
+    game = pp["game_id"].replace("game-0", "Game ").replace("game-", "Game ")
+    return f"{game}: {span} after {n} left theory with {pp['novelty_label']}, {pos}; on the clock {n} went from {gap(gap0)} to {gap(gap1)}."

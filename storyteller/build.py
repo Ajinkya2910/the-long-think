@@ -9,6 +9,7 @@ from .analysis import build_moves, flag_long_thinks, rank_critical
 from .cache import Cache
 from .config import Config
 from .engine import Engine
+from .events import game_events
 from .ingest import ParsedGame
 from .narrative import moment_facts, narrate
 from .opening import opening_pass
@@ -72,6 +73,9 @@ def analyse_game(cfg: Config, cache: Cache, engine: Engine, game: ParsedGame, sk
         "pgn": game.pgn,
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
     }
+    events = game_events(doc, cfg.raw.get("patterns"))
+    for mc in events["missed_chances"]:
+        moves[mc["reply_ply"]]["tags"].append("missed_chance")
     crit = rank_critical(moves, cfg["critical"])
     for c in crit:
         facts = moment_facts(doc, c["ply"], display)
@@ -79,7 +83,7 @@ def analyse_game(cfg: Config, cache: Cache, engine: Engine, game: ParsedGame, sk
         c["narrative"] = narrate(facts, cfg["narrative"], cache)
         moves[c["ply"]]["tags"].append("critical")
     doc["critical_moments"] = crit
-    doc["summary"] = game_summary(doc)
+    doc["summary"] = game_summary(doc, events=events)
     return doc
 
 
