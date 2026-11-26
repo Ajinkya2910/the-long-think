@@ -1,4 +1,4 @@
-from storyteller.narrative import template, ungrounded_moves
+from storyteller.narrative import pronouns_used, template, ungrounded_moves
 
 FACTS = {
     "move": "17...Bb4", "played_san": "Bb4", "player": "Gukesh", "opponent": "Sindarov", "color": "black",
@@ -25,3 +25,14 @@ def test_template_mentions_only_facts():
     assert t["source"] == "template"
     assert ungrounded_moves(t["text"], FACTS) == []
     assert "36m 14s" in t["text"]
+
+
+def test_bare_square_allowed_only_if_a_fact_move_lands_there():
+    assert ungrounded_moves("The bishop settled on b4.", FACTS) == []        # Bb4 lands on b4
+    assert ungrounded_moves("Then h4 would follow.", FACTS) == ["h4"]          # no fact move lands on h4
+
+
+def test_pronoun_detector():
+    assert pronouns_used({"headline": "x", "text": "Gukesh used his time", "likely_reasons": [{"reason": "He was short"}]}) == ["he", "his"]
+    assert pronouns_used({"headline": "x", "text": "The theme: hero and herring", "likely_reasons": []}) == []
+    assert pronouns_used(template(FACTS)) == []

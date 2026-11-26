@@ -68,3 +68,17 @@ def test_parse_pgn_header_rejects_free_text():
 def test_parse_simple_increment():
     tc = parse_pgn_header("5400+30")
     assert tc.base == 5400 and tc.increment == 30 and tc.increment_from_move == 1
+
+
+def test_dotenv_loading(tmp_path, monkeypatch):
+    from storyteller.config import load_dotenv
+    env = tmp_path / ".env"
+    env.write_text('ANTHROPIC_API_KEY=   # empty values are ignored\nLT_TEST_A="abc"  # comment\nLT_TEST_B=keep\n')
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.setenv("LT_TEST_B", "from-shell")
+    load_dotenv(env)
+    import os
+    assert "ANTHROPIC_API_KEY" not in os.environ
+    assert os.environ["LT_TEST_A"] == "abc"
+    assert os.environ["LT_TEST_B"] == "from-shell"   # real env wins
+    monkeypatch.delenv("LT_TEST_A")

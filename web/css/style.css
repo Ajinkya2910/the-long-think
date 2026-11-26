@@ -228,3 +228,6 @@ cg-board { border-radius: 6px; }
 .tree .leaf { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; margin-top: 4px; font-size: 13.5px; }
 .tree .leaf a { font-weight: 600; text-decoration: underline; text-decoration-color: var(--rule); text-underline-offset: 3px; }
 .tree .leaf a:hover { text-decoration-color: var(--ink); }
+
+.reasons { margin: 0 0 12px; padding: 10px 12px; background: var(--surface-2); border-radius: 10px; }
+.reasons ul { margin: 6px 0 0; padding-left: 18px; color: var(--ink-2); font-size: 14px; display: grid; gap: 4px; }

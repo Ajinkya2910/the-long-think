@@ -34,7 +34,22 @@ class Config:
         return os.environ.get("LICHESS_TOKEN") or None
 
 
+def load_dotenv(path: Path) -> None:
+    """Read KEY=VALUE lines from .env into the environment (real env vars win)."""
+    if not path.exists():
+        return
+    for line in path.read_text().splitlines():
+        line = line.split("#", 1)[0].strip()
+        if "=" not in line:
+            continue
+        key, value = (x.strip() for x in line.split("=", 1))
+        value = value.strip("'\"")
+        if key and value:
+            os.environ.setdefault(key, value)
+
+
 def load_config(path: str | Path | None = None) -> Config:
+    load_dotenv(ROOT / ".env")
     p = Path(path) if path else Path(os.environ.get("LONGTHINK_CONFIG", ROOT / "config.toml"))
     with open(p, "rb") as f:
         raw = tomllib.load(f)
