@@ -63,12 +63,9 @@ def fetch_broadcast(cfg: Config, refresh: bool = False) -> list[Path]:
     paths = []
     for rd in rounds:
         path = raw_dir / f"{rd['slug'] if 'slug' in rd else rd['id']}.pgn"
-        if path.exists() and not refresh and rd.get("finished"):
+        if path.exists() and not refresh and _is_complete(path):
             paths.append(path)
             continue
-        if not rd.get("finished") and not rd.get("ongoing"):
-            # Not started yet; still fetch once in case the flag lags behind.
-            pass
         pr = s.get(f"{base}/api/broadcast/round/{rd['id']}.pgn", timeout=30)
         if pr.status_code != 200:
             log.warning("round %s: HTTP %s", rd["id"], pr.status_code)
@@ -77,6 +74,12 @@ def fetch_broadcast(cfg: Config, refresh: bool = False) -> list[Path]:
         paths.append(path)
         log.info("fetched %s (%s)", rd.get("name"), rd["id"])
     return paths
+
+
+def _is_complete(path: Path) -> bool:
+    """Reuse a cached round only if every game in it has moves and a final result."""
+    games = parse_pgn_text(path.read_text())
+    return bool(games) and all(g.headers.get("Result", "*") != "*" for g in games)
 
 
 _CLK = re.compile(r"\[%clk\s+(\d+):(\d+):(\d+(?:\.\d+)?)\]")
