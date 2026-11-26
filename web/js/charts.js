@@ -357,3 +357,61 @@ export function sparkline(wps, { w = 160, hgt = 34 } = {}) {
   return svg;
 }
 export { evalText };
+
+/** Match win probability after each game (0..n), two players, with a shaded draw-rate band. */
+export function probChart(el, { series, games, players, onHover }) {
+  el.innerHTML = '';
+  const tip = h('div', { class: 'tooltip' });
+  el.append(tip);
+  const H = 240, top = 14, bot = H - 26, L = 46, R = 84;
+  const draw = () => {
+    const w = el.clientWidth || 600;
+    el.querySelector('svg')?.remove();
+    const svg = s('svg', { viewBox: `0 0 ${w} ${H}`, width: w, height: H, role: 'img', 'aria-label': 'Match win probability after each game' });
+    const x = (k) => L + (k / games) * (w - L - R);
+    const y = (p) => bot - (p / 100) * (bot - top);
+    const g = s('g', { class: 'grid' });
+    for (const p of [0, 25, 50, 75, 100]) {
+      g.append(s('line', { x1: L, x2: w - R, y1: y(p), y2: y(p), class: p === 50 ? 'zero' : null }));
+      g.append(s('text', { x: L - 8, y: y(p) + 3.5, 'text-anchor': 'end' }, `${p}%`));
+    }
+    for (let k = 0; k <= games; k += 2) g.append(s('text', { x: x(k), y: H - 6, 'text-anchor': 'middle' }, k === 0 ? 'start' : `G${k}`));
+    svg.append(g);
+    // games not played yet
+    const last = series.length - 1;
+    if (last < games) svg.append(s('rect', { x: x(last), y: top, width: x(games) - x(last), height: bot - top, fill: 'var(--book)' }),
+      s('text', { x: (x(last) + x(games)) / 2, y: top + 14, 'text-anchor': 'middle', class: 'lbl' }, 'games still to play'));
+    players.forEach((pl, i) => {
+      const val = (sr) => sr.win[pl.name];
+      const bandOf = (sr) => (i === 0 ? sr.band[players[0].name] : sr.band[players[0].name].map((v) => 100 - v).reverse());
+      if (series.length > 1) {
+        const up = series.map((sr, k) => `${k ? 'L' : 'M'}${x(k)},${y(bandOf(sr)[1])}`).join('');
+        const down = series.map((sr, k) => `L${x(k)},${y(bandOf(sr)[0])}`).reverse().join('');
+        svg.append(s('path', { d: `${up}${down}Z`, fill: pl.color, opacity: 0.14 }));
+      } else {
+        const [lo, hi] = bandOf(series[0]);
+        svg.append(s('line', { x1: x(0), x2: x(0), y1: y(lo), y2: y(hi), stroke: pl.color, 'stroke-width': 6, opacity: 0.25, 'stroke-linecap': 'round' }));
+      }
+      const d = series.map((sr, k) => `${k ? 'L' : 'M'}${x(k)},${y(val(sr))}`).join('');
+      svg.append(s('path', { d, fill: 'none', stroke: pl.color, 'stroke-width': 2, 'stroke-linejoin': 'round' }));
+      series.forEach((sr, k) => svg.append(s('circle', { cx: x(k), cy: y(val(sr)), r: 4, fill: pl.color, stroke: 'var(--surface)', 'stroke-width': 2 })));
+      const end = series[last];
+      svg.append(s('text', { x: x(last) + 10, y: y(val(end)) + 4, class: 'lbl' }, `${pl.short} ${val(end).toFixed(0)}%`));
+    });
+    // hover targets per game
+    series.forEach((sr, k) => {
+      const hit = s('rect', { x: x(k) - 14, y: top, width: 28, height: bot - top, fill: 'transparent' });
+      hit.addEventListener('pointerenter', () => {
+        tip.innerHTML = onHover(sr);
+        tip.style.display = 'block';
+        tip.style.left = `${Math.min(w - 120, Math.max(120, x(k)))}px`;
+        tip.style.top = `${top + 8}px`;
+      });
+      hit.addEventListener('pointerleave', () => { tip.style.display = 'none'; });
+      svg.append(hit);
+    });
+    el.prepend(svg);
+  };
+  draw();
+  return draw;
+}

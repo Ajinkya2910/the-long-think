@@ -1,5 +1,5 @@
 import { $, h, getJSON, dur, themeToggle } from './common.js';
-import { sparkline, dotPlot, groupedBars, scatter } from './charts.js';
+import { sparkline, dotPlot, groupedBars, scatter, probChart } from './charts.js';
 
 themeToggle($('#theme'));
 
@@ -27,6 +27,39 @@ async function main() {
       h('div', { class: 'pl' }, b.short, h('span', { class: 'dot', style: `background:${color(b.name)};width:14px;height:14px` })),
     ),
   ));
+
+  // ---------- who is the favourite ----------
+  const wp = match.win_probability;
+  let drawOdds = () => {};
+  if (wp) {
+    const now = wp.series.at(-1);
+    const fav = names.slice().sort((x, y) => now.win[y] - now.win[x])[0];
+    const ng = wp.next_game;
+    const nm = (n) => prof(n).short;
+    const chartEl = h('div', { class: 'chart' });
+    const tableWrap = h('div', { class: 'scroll-x', hidden: true },
+      h('table', { class: 'data-table' },
+        h('thead', {}, h('tr', {}, ...['', `${nm(names[0])} wins match`, `${nm(names[1])} wins match`, 'Tiebreak needed', 'Score'].map((t) => h('th', {}, t)))),
+        h('tbody', {}, ...wp.series.map((sr) => h('tr', {}, h('td', {}, sr.label), h('td', {}, `${sr.win[names[0]]}%`), h('td', {}, `${sr.win[names[1]]}%`), h('td', {}, `${sr.tiebreak}%`), h('td', {}, `${fmtPts(sr.score[names[0]])}–${fmtPts(sr.score[names[1]])}`))))));
+    const tableBtn = h('button', { class: 'table-toggle', onclick: () => { tableWrap.hidden = !tableWrap.hidden; tableBtn.textContent = tableWrap.hidden ? 'Show data table' : 'Hide data table'; } }, 'Show data table');
+    app.append(
+      h('div', { class: 'section-h', id: 'odds' }, h('h2', {}, 'Who’s the favourite?'), h('span', { class: 'muted' }, 'A rating model, not the engine’s opinion of the games')),
+      h('section', { class: 'stats', style: 'margin-top:0' },
+        h('div', { class: 'card stat' }, h('div', { class: 'eyebrow' }, 'Favourite'), h('div', { class: 'v' }, h('span', { class: 'dot', style: `background:${color(fav)};width:11px;height:11px;margin-right:8px;vertical-align:4px` }), `${nm(fav)} ${now.win[fav].toFixed(0)}%`), h('div', { class: 's' }, `${now.label.toLowerCase()} · range ${fav === names[0] ? now.band[names[0]].join('–') : now.band[names[0]].map((v) => (100 - v).toFixed(1)).reverse().join('–')}%`)),
+        h('div', { class: 'card stat' }, h('div', { class: 'eyebrow' }, 'Underdog'), h('div', { class: 'v' }, `${nm(names.find((n) => n !== fav))} ${now.win[names.find((n) => n !== fav)].toFixed(0)}%`), h('div', { class: 's' }, 'chance to win the match')),
+        h('div', { class: 'card stat' }, h('div', { class: 'eyebrow' }, 'Goes to tiebreak'), h('div', { class: 'v' }, `${now.tiebreak.toFixed(0)}%`), h('div', { class: 's' }, 'chance the match ends 7–7')),
+        ng ? h('div', { class: 'card stat' }, h('div', { class: 'eyebrow' }, `Next: Game ${ng.round}`), h('div', { class: 'v', style: 'font-size:19px' }, `${ng.white_win.toFixed(0)} · ${ng.draw.toFixed(0)} · ${ng.black_win.toFixed(0)}%`), h('div', { class: 's' }, `${nm(ng.white)} (W) win · draw · ${nm(ng.black)} (B) win`)) : null),
+      h('div', { class: 'card chart-card' },
+        h('div', { class: 'chart-head' }, h('h2', {}, 'Chance to win the match'), h('div', { class: 'legend' }, ...names.map((n) => h('span', {}, h('span', { class: 'dot', style: `background:${color(n)}` }), ' ', nm(n))), h('span', {}, h('span', { style: 'display:inline-block;width:14px;height:10px;background:var(--rule);vertical-align:-1px' }), ' draw-rate range'))),
+        chartEl,
+        h('p', { class: 'note' }, wp.assumptions.text, ' Ratings decide most of this; results update it game by game.'),
+        tableBtn, tableWrap));
+    drawOdds = probChart(chartEl, {
+      series: wp.series, games: wp.games,
+      players: names.map((n) => ({ name: n, short: nm(n), color: color(n) })),
+      onHover: (sr) => `<b>${sr.label}</b>${sr.result ? ` (${{ '1-0': '1–0', '0-1': '0–1', '1/2-1/2': '½–½' }[sr.result]})` : ''}<br>${names.map((n) => `${nm(n)} ${sr.win[n].toFixed(1)}%`).join(' · ')}<br>tiebreak ${sr.tiebreak.toFixed(1)}%`,
+    });
+  }
 
   // ---------- games table ----------
   const byRound = new Map(match.games.map((g) => [parseInt(g.round, 10), g]));
@@ -152,7 +185,7 @@ async function main() {
   [fx, fy, fp, fph, fg, fb].forEach((e) => e.addEventListener('change', update));
   update();
   let rt;
-  addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { draws.forEach((d) => d()); drawMap(); }, 120); });
+  addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { draws.forEach((d) => d()); drawMap(); drawOdds(); }, 120); });
 }
 
 function treeList(segments, match, color) {

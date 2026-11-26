@@ -136,3 +136,23 @@ def load_games(paths: list[Path]) -> list[ParsedGame]:
         for g in parse_pgn_text(p.read_text()):
             seen[g.game_id] = g
     return [seen[k] for k in sorted(seen)]
+
+
+def read_pairings(paths: list[Path]) -> list[dict]:
+    """Every scheduled game (played or not) from PGN headers: round, colours, ratings, result."""
+    out: dict[int, dict] = {}
+    for p in paths:
+        stream = io.StringIO(p.read_text())
+        while (headers := chess.pgn.read_headers(stream)) is not None:
+            rnd = headers.get("Round", "?").split(".")[0]
+            if not rnd.isdigit() or not headers.get("White") or not headers.get("Black"):
+                continue
+            out[int(rnd)] = {
+                "round": int(rnd),
+                "white": headers["White"],
+                "black": headers["Black"],
+                "white_elo": int(headers["WhiteElo"]) if headers.get("WhiteElo", "").isdigit() else None,
+                "black_elo": int(headers["BlackElo"]) if headers.get("BlackElo", "").isdigit() else None,
+                "result": headers.get("Result", "*"),
+            }
+    return [out[k] for k in sorted(out)]

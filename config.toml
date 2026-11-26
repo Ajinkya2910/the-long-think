@@ -65,6 +65,12 @@ missed_chance_min_gift = 10.0       # opponent error must hand over >= this many
 missed_chance_give_back = 0.5       # ...and the reply must return >= this share of it
 alerts_min_games = 3                # records ("highest so far") need at least this many games
 
+[match_odds]
+# Simple Elo model for "who is the favourite"; every assumption is shown on the site.
+draw_rate = 0.65                    # share of classical WCC games that end drawn (2024 match: 9 of 14)
+draw_rate_range = [0.55, 0.75]      # shaded band on the chart
+white_advantage_elo = 35            # rating-point bonus for having White
+
 [narrative]
 enabled = true                      # uses Claude only if ANTHROPIC_API_KEY (or a profile) is available
 model = "claude-opus-5-5"

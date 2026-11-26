@@ -11,6 +11,8 @@ from .config import Config
 from .engine import Engine
 from .alerts import alert_history
 from .events import game_events
+from .ingest import read_pairings
+from .match_odds import win_probability
 from .opening_tree import opening_tree
 from .ingest import ParsedGame
 from .narrative import moment_facts, narrate
@@ -115,6 +117,8 @@ def write_outputs(cfg: Config, docs: list[dict]) -> None:
             "accuracy": {s: doc["summary"]["players"][s]["accuracy"] for s in ("white", "black")},
             "sparkline": [round(doc["moves"][0]["eval_before"]["wp"], 1)] + [round(m["eval_after"]["wp"], 1) for m in doc["moves"]],
         })
+    pairings = read_pairings(sorted((cfg.data_dir / "raw").glob("*.pgn")))
+    odds = win_probability(pairings, cfg["match_odds"], cfg["match"]["players"], display) if "match_odds" in cfg.raw else None
     rounds_path = cfg.data_dir / "raw" / "rounds.json"
     schedule = json.loads(rounds_path.read_text()) if rounds_path.exists() else []
     match = {
@@ -127,6 +131,7 @@ def write_outputs(cfg: Config, docs: list[dict]) -> None:
         "games": index,
         "patterns": patterns,
         "opening_tree": opening_tree(docs),
+        "win_probability": odds,
         "alerts": alert_history(docs, display, int(cfg.raw.get("patterns", {}).get("alerts_min_games", 3))),
         "alerts_min_games": int(cfg.raw.get("patterns", {}).get("alerts_min_games", 3)),
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),

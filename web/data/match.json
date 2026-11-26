@@ -2896,6 +2896,97 @@
    }
   ]
  },
+ "win_probability": {
+  "players": [
+   "Gukesh D",
+   "Sindarov, Javokhir"
+  ],
+  "games": 14,
+  "ratings": {
+   "Sindarov, Javokhir": 2782.0,
+   "Gukesh D": 2710.0
+  },
+  "assumptions": {
+   "draw_rate": 0.65,
+   "draw_rate_range": [
+    0.55,
+    0.75
+   ],
+   "white_advantage_elo": 35.0,
+   "tiebreak": "higher-rated player wins tiebreaks with their Elo expected score",
+   "text": "Each game uses the players' FIDE ratings (Gukesh 2710, Sindarov 2782), a 35-point bonus for White and a 65% draw rate. A 7–7 tie goes to tiebreaks. The band shows draw rates from 55% to 75%."
+  },
+  "series": [
+   {
+    "after_game": 0,
+    "label": "Before Game 1",
+    "result": null,
+    "score": {
+     "Gukesh D": 0.0,
+     "Sindarov, Javokhir": 0.0
+    },
+    "win": {
+     "Gukesh D": 7.9,
+     "Sindarov, Javokhir": 92.1
+    },
+    "tiebreak": 7.6,
+    "band": {
+     "Gukesh D": [
+      4.9,
+      11.2
+     ]
+    }
+   },
+   {
+    "after_game": 1,
+    "label": "After Game 1",
+    "result": "1/2-1/2",
+    "score": {
+     "Gukesh D": 0.5,
+     "Sindarov, Javokhir": 0.5
+    },
+    "win": {
+     "Gukesh D": 9.6,
+     "Sindarov, Javokhir": 90.4
+    },
+    "tiebreak": 9.0,
+    "band": {
+     "Gukesh D": [
+      6.3,
+      12.9
+     ]
+    }
+   },
+   {
+    "after_game": 2,
+    "label": "After Game 2",
+    "result": "1/2-1/2",
+    "score": {
+     "Gukesh D": 1.0,
+     "Sindarov, Javokhir": 1.0
+    },
+    "win": {
+     "Gukesh D": 9.5,
+     "Sindarov, Javokhir": 90.5
+    },
+    "tiebreak": 9.4,
+    "band": {
+     "Gukesh D": [
+      6.3,
+      12.9
+     ]
+    }
+   }
+  ],
+  "next_game": {
+   "round": 3,
+   "white": "Sindarov, Javokhir",
+   "black": "Gukesh D",
+   "white_win": 32.4,
+   "draw": 65.0,
+   "black_win": 2.6
+  }
+ },
  "alerts": [
   {
    "game_id": "game-01",
@@ -2933,5 +3024,5 @@
   }
  ],
  "alerts_min_games": 3,
- "generated_at": "2026-11-26T03:12:02+00:00"
+ "generated_at": "2026-11-26T03:18:45+00:00"
 }

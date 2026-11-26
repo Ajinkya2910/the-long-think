@@ -75,6 +75,7 @@ Results are cached by a hash of the facts, so you pay once per moment. Without a
 | `[classification]` | inaccuracy / mistake / blunder thresholds (win% lost, Lichess-style) |
 | `[critical]` | number of moments, minimum spacing, weights for eval swing / time / difficulty, novelty bonus |
 | `[patterns]` | prep-payoff horizon, missed-chance thresholds, games needed before records are reported |
+| `[match_odds]` | draw rate (and range for the band), White bonus in rating points |
 | `[narrative]` | on/off, model, effort |
 
 Secrets come only from env vars: `ANTHROPIC_API_KEY`, `LICHESS_TOKEN`, plus `STOCKFISH_PATH` and `ENGINE_DEPTH` overrides.
@@ -102,6 +103,10 @@ Secrets come only from env vars: `ANTHROPIC_API_KEY`, `LICHESS_TOKEN`, plus `STO
 - **Insight alerts** (`storyteller/alerts.py`): after each game, what became true with that game: *records*
   (a new high or low for a player metric, from game 3 on), *streaks* (a metric rose or fell in each of the
   last 3+ games) and *firsts* (first decisive game, first mistake, first missed chance, first time trouble).
+- **Match win probability** (`storyteller/match_odds.py`): each game's win/draw/loss odds from both FIDE ratings,
+  a bonus for White and a fixed draw rate; an exact calculation over all remaining games (first to 7.5, a 7–7 tie
+  goes to tiebreaks) gives each player's chance after every game. The shaded band uses the low and high draw
+  rates from `[match_odds]`. It's a rating model, not the engine's opinion of the games.
 - **Phases**: opening = book moves; endgame = 6 or fewer pieces besides kings and pawns; middlegame otherwise.
 
 ## Project layout
