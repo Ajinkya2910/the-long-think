@@ -63,6 +63,7 @@ novelty_bonus = 0.15                # leaving theory is always part of the story
 prep_payoff_moves = 10              # compare the novelty with N full moves later
 missed_chance_min_gift = 10.0       # opponent error must hand over >= this many win% points
 missed_chance_give_back = 0.5       # ...and the reply must return >= this share of it
+alerts_min_games = 3                # records ("highest so far") need at least this many games
 
 [narrative]
 enabled = true                      # uses Claude only if ANTHROPIC_API_KEY (or a profile) is available

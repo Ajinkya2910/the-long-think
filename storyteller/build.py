@@ -9,7 +9,9 @@ from .analysis import build_moves, flag_long_thinks, rank_critical
 from .cache import Cache
 from .config import Config
 from .engine import Engine
+from .alerts import alert_history
 from .events import game_events
+from .opening_tree import opening_tree
 from .ingest import ParsedGame
 from .narrative import moment_facts, narrate
 from .opening import opening_pass
@@ -124,6 +126,9 @@ def write_outputs(cfg: Config, docs: list[dict]) -> None:
         "display": display,
         "games": index,
         "patterns": patterns,
+        "opening_tree": opening_tree(docs),
+        "alerts": alert_history(docs, display, int(cfg.raw.get("patterns", {}).get("alerts_min_games", 3))),
+        "alerts_min_games": int(cfg.raw.get("patterns", {}).get("alerts_min_games", 3)),
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
     }
     (out / "match.json").write_text(json.dumps(match, ensure_ascii=False, indent=1))

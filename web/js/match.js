@@ -55,7 +55,28 @@ async function main() {
 
   if (!played) return;
 
+  // ---------- opening tree ----------
+  if (match.opening_tree?.segments?.length) {
+    app.append(h('div', { class: 'section-h', id: 'openings' }, h('h2', {}, 'Opening tree'), h('span', { class: 'muted' }, 'Every game up to the move that left the masters database. Dot = who left theory.')),
+      h('div', { class: 'card tree' }, treeList(match.opening_tree.segments, match, color)));
+  }
+
   // ---------- insights ----------
+  const hist = match.alerts || [];
+  const last = hist.at(-1);
+  if (last) {
+    const kindTag = (k) => h('span', { class: `tag ${k === 'record' ? 'novelty' : ''}` }, k);
+    const item = (a) => h('li', {}, kindTag(a.kind), a.player ? h('span', { class: 'dot', style: `background:${color(a.player)};flex:none` }) : null, h('span', {}, a.text));
+    const earlier = hist.slice(0, -1).filter((x) => x.alerts.length).reverse();
+    app.append(h('div', { class: 'card alerts', id: 'alerts' },
+      h('div', { class: 'eyebrow' }, 'Insight alerts'),
+      h('h3', {}, `What changed after ${last.game}`),
+      last.alerts.length ? h('ul', {}, ...last.alerts.map(item))
+        : h('p', { class: 'ink2', style: 'margin:0' }, `Nothing new: no records, streaks or firsts.${played < (match.alerts_min_games || 3) ? ` Records (“highest so far”) start after Game ${match.alerts_min_games || 3}, and streaks need three games in a row.` : ''}`),
+      earlier.length ? h('details', {}, h('summary', {}, 'Earlier games'), ...earlier.map((g) => [h('h4', {}, g.game), h('ul', {}, ...g.alerts.map(item))]).flat()) : null,
+    ));
+  }
+
   const ins = match.patterns.insights;
   app.append(h('div', { class: 'section-h', id: 'patterns' }, h('h2', {}, 'Patterns so far'), h('span', { class: 'muted' }, played < 4 ? `Based on ${played} game${played > 1 ? 's' : ''}. These become meaningful as the match goes on.` : `Across ${played} games`)),
     h('div', { class: 'insights' }, ...ins.map((i) => h('div', { class: 'card insight' }, h('span', { class: 'dot', style: `background:${color(i.player)}` }), h('span', {}, i.text)))));
@@ -132,6 +153,32 @@ async function main() {
   update();
   let rt;
   addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { draws.forEach((d) => d()); drawMap(); }, 120); });
+}
+
+function treeList(segments, match, color) {
+  const byId = new Map(match.games.map((g) => [g.id, g]));
+  const res = { '1-0': '1–0', '0-1': '0–1', '1/2-1/2': '½–½', '*': 'live' };
+  return h('ul', {}, ...segments.map((seg) => {
+    const line = h('div', { class: 'line' });
+    seg.moves.forEach((m, i) => {
+      const white = m.ply % 2 === 0;
+      if (white || i === 0) line.append(h('span', { class: 'no' }, `${Math.floor(m.ply / 2) + 1}${white ? '.' : '...'}`));
+      line.append(h('span', { class: 'm', title: m.master_games != null ? `${m.master_games.toLocaleString()} master games` : null }, m.san));
+    });
+    line.append(h('span', { class: 'count' }, `${seg.games.length} game${seg.games.length === 1 ? '' : 's'}`));
+    const leaves = [
+      ...seg.novelties.map((n) => {
+        const g = byId.get(n.game_id);
+        const mv = seg.moves.find((x) => x.ply === n.ply);
+        return h('div', { class: 'leaf' },
+          h('span', {}, h('span', { class: 'dot', style: `background:${color(n.player)}` }), ` ${match.display[n.player]?.short || n.player} left theory`),
+          h('a', { href: `game.html?id=${n.game_id}&ply=${n.ply + 1}` }, `${Math.floor(n.ply / 2) + 1}${n.ply % 2 ? '...' : '.'}${mv?.san ?? ''}`),
+          h('span', { class: 'muted' }, `Game ${parseInt(n.round, 10)} · ${res[n.result] || n.result}${g ? ` · ${g.white.short} (W) – ${g.black.short} (B)` : ''}`));
+      }),
+      ...(seg.ends || []).map((e) => h('div', { class: 'leaf muted' }, `Game ${parseInt(e.round, 10)} · ${res[e.result] || e.result} · ${e.reason}`)),
+    ];
+    return h('li', {}, line, ...leaves, seg.children.length ? treeList(seg.children, match, color) : null);
+  }));
 }
 
 const fmtPts = (p) => (Number.isInteger(p) ? String(p) : `${Math.floor(p) || ''}½`);

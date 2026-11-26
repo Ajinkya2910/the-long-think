@@ -74,7 +74,7 @@ Results are cached by a hash of the facts, so you pay once per moment. Without a
 | `[difficulty]` | "good move" window and "only move" gap, in win% points; discount for recaptures / check evasions |
 | `[classification]` | inaccuracy / mistake / blunder thresholds (win% lost, Lichess-style) |
 | `[critical]` | number of moments, minimum spacing, weights for eval swing / time / difficulty, novelty bonus |
-| `[patterns]` | prep-payoff horizon, missed-chance thresholds |
+| `[patterns]` | prep-payoff horizon, missed-chance thresholds, games needed before records are reported |
 | `[narrative]` | on/off, model, effort |
 
 Secrets come only from env vars: `ANTHROPIC_API_KEY`, `LICHESS_TOKEN`, plus `STOCKFISH_PATH` and `ENGINE_DEPTH` overrides.
@@ -97,6 +97,11 @@ Secrets come only from env vars: `ANTHROPIC_API_KEY`, `LICHESS_TOKEN`, plus `STO
   (or the last move, if the game ends sooner), from the side that left theory.
 - **Missed chances**: the opponent's move hands over at least 10 winning-chance points, and the reply gives back
   at least half of them. Thresholds are in `[patterns]`.
+- **Opening tree** (`storyteller/opening_tree.py`): every game merged into one move tree up to its novelty;
+  shared runs of moves are collapsed into single rows.
+- **Insight alerts** (`storyteller/alerts.py`): after each game, what became true with that game: *records*
+  (a new high or low for a player metric, from game 3 on), *streaks* (a metric rose or fell in each of the
+  last 3+ games) and *firsts* (first decisive game, first mistake, first missed chance, first time trouble).
 - **Phases**: opening = book moves; endgame = 6 or fewer pieces besides kings and pawns; middlegame otherwise.
 
 ## Project layout

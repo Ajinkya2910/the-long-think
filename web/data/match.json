@@ -2562,5 +2562,376 @@
    ]
   ]
  },
- "generated_at": "2026-11-26T00:26:14+00:00"
+ "opening_tree": {
+  "games": [
+   "game-01",
+   "game-02"
+  ],
+  "segments": [
+   {
+    "moves": [
+     {
+      "ply": 0,
+      "san": "e4",
+      "label": "1.e4",
+      "master_games": 1368125
+     },
+     {
+      "ply": 1,
+      "san": "e5",
+      "label": "1...e5",
+      "master_games": 332635
+     },
+     {
+      "ply": 2,
+      "san": "Nf3",
+      "label": "2.Nf3",
+      "master_games": 307179
+     },
+     {
+      "ply": 3,
+      "san": "Nc6",
+      "label": "2...Nc6",
+      "master_games": 263422
+     },
+     {
+      "ply": 4,
+      "san": "Bb5",
+      "label": "3.Bb5",
+      "master_games": 172655
+     },
+     {
+      "ply": 5,
+      "san": "Nf6",
+      "label": "3...Nf6",
+      "master_games": 35188
+     },
+     {
+      "ply": 6,
+      "san": "O-O",
+      "label": "4.O-O",
+      "master_games": 20416
+     },
+     {
+      "ply": 7,
+      "san": "Nxe4",
+      "label": "4...Nxe4",
+      "master_games": 18727
+     },
+     {
+      "ply": 8,
+      "san": "d4",
+      "label": "5.d4",
+      "master_games": 12238
+     },
+     {
+      "ply": 9,
+      "san": "Nd6",
+      "label": "5...Nd6",
+      "master_games": 11401
+     },
+     {
+      "ply": 10,
+      "san": "Bxc6",
+      "label": "6.Bxc6",
+      "master_games": 9529
+     },
+     {
+      "ply": 11,
+      "san": "dxc6",
+      "label": "6...dxc6",
+      "master_games": 9509
+     },
+     {
+      "ply": 12,
+      "san": "dxe5",
+      "label": "7.dxe5",
+      "master_games": 9485
+     },
+     {
+      "ply": 13,
+      "san": "Nf5",
+      "label": "7...Nf5",
+      "master_games": 9308
+     },
+     {
+      "ply": 14,
+      "san": "Qxd8+",
+      "label": "8.Qxd8+",
+      "master_games": 9182
+     },
+     {
+      "ply": 15,
+      "san": "Kxd8",
+      "label": "8...Kxd8",
+      "master_games": 9178
+     },
+     {
+      "ply": 16,
+      "san": "Rd1+",
+      "label": "9.Rd1+",
+      "master_games": 1097
+     },
+     {
+      "ply": 17,
+      "san": "Ke8",
+      "label": "9...Ke8",
+      "master_games": 1096
+     },
+     {
+      "ply": 18,
+      "san": "Nc3",
+      "label": "10.Nc3",
+      "master_games": 947
+     },
+     {
+      "ply": 19,
+      "san": "Ne7",
+      "label": "10...Ne7",
+      "master_games": 562
+     },
+     {
+      "ply": 20,
+      "san": "h3",
+      "label": "11.h3",
+      "master_games": 449
+     },
+     {
+      "ply": 21,
+      "san": "Ng6",
+      "label": "11...Ng6",
+      "master_games": 427
+     },
+     {
+      "ply": 22,
+      "san": "Be3",
+      "label": "12.Be3",
+      "master_games": 106
+     },
+     {
+      "ply": 23,
+      "san": "Be7",
+      "label": "12...Be7",
+      "master_games": 49
+     },
+     {
+      "ply": 24,
+      "san": "Ne4",
+      "label": "13.Ne4",
+      "master_games": 2
+     },
+     {
+      "ply": 25,
+      "san": "Bd7",
+      "label": "13...Bd7",
+      "master_games": null
+     }
+    ],
+    "games": [
+     "game-01"
+    ],
+    "novelties": [
+     {
+      "game_id": "game-01",
+      "round": "1.1",
+      "side": "black",
+      "player": "Gukesh D",
+      "result": "1/2-1/2",
+      "ply": 25
+     }
+    ],
+    "ends": [],
+    "children": []
+   },
+   {
+    "moves": [
+     {
+      "ply": 0,
+      "san": "d4",
+      "label": "1.d4",
+      "master_games": 1070515
+     },
+     {
+      "ply": 1,
+      "san": "d5",
+      "label": "1...d5",
+      "master_games": 280085
+     },
+     {
+      "ply": 2,
+      "san": "Nf3",
+      "label": "2.Nf3",
+      "master_games": 49657
+     },
+     {
+      "ply": 3,
+      "san": "Nf6",
+      "label": "2...Nf6",
+      "master_games": 56154
+     },
+     {
+      "ply": 4,
+      "san": "Bf4",
+      "label": "3.Bf4",
+      "master_games": 8789
+     },
+     {
+      "ply": 5,
+      "san": "c5",
+      "label": "3...c5",
+      "master_games": 5489
+     },
+     {
+      "ply": 6,
+      "san": "e3",
+      "label": "4.e3",
+      "master_games": 4642
+     },
+     {
+      "ply": 7,
+      "san": "e6",
+      "label": "4...e6",
+      "master_games": 373
+     },
+     {
+      "ply": 8,
+      "san": "Nbd2",
+      "label": "5.Nbd2",
+      "master_games": 1106
+     },
+     {
+      "ply": 9,
+      "san": "Nc6",
+      "label": "5...Nc6",
+      "master_games": 801
+     },
+     {
+      "ply": 10,
+      "san": "c3",
+      "label": "6.c3",
+      "master_games": 1793
+     },
+     {
+      "ply": 11,
+      "san": "Be7",
+      "label": "6...Be7",
+      "master_games": 570
+     },
+     {
+      "ply": 12,
+      "san": "Ne5",
+      "label": "7.Ne5",
+      "master_games": 156
+     },
+     {
+      "ply": 13,
+      "san": "Qb6",
+      "label": "7...Qb6",
+      "master_games": 17
+     },
+     {
+      "ply": 14,
+      "san": "Rb1",
+      "label": "8.Rb1",
+      "master_games": 17
+     },
+     {
+      "ply": 15,
+      "san": "Nxe5",
+      "label": "8...Nxe5",
+      "master_games": 2
+     },
+     {
+      "ply": 16,
+      "san": "Bxe5",
+      "label": "9.Bxe5",
+      "master_games": 1
+     },
+     {
+      "ply": 17,
+      "san": "Bd7",
+      "label": "9...Bd7",
+      "master_games": 1
+     },
+     {
+      "ply": 18,
+      "san": "a4",
+      "label": "10.a4",
+      "master_games": 1
+     },
+     {
+      "ply": 19,
+      "san": "O-O",
+      "label": "10...O-O",
+      "master_games": 1
+     },
+     {
+      "ply": 20,
+      "san": "Bd3",
+      "label": "11.Bd3",
+      "master_games": 1
+     },
+     {
+      "ply": 21,
+      "san": "Qd8",
+      "label": "11...Qd8",
+      "master_games": null
+     }
+    ],
+    "games": [
+     "game-02"
+    ],
+    "novelties": [
+     {
+      "game_id": "game-02",
+      "round": "2.1",
+      "side": "black",
+      "player": "Sindarov, Javokhir",
+      "result": "1/2-1/2",
+      "ply": 21
+     }
+    ],
+    "ends": [],
+    "children": []
+   }
+  ]
+ },
+ "alerts": [
+  {
+   "game_id": "game-01",
+   "game": "Game 1",
+   "alerts": [
+    {
+     "game_id": "game-01",
+     "game": "Game 1",
+     "player": "Gukesh D",
+     "kind": "first",
+     "metric": "time_trouble_moves",
+     "text": "Game 1: the first time Gukesh got into time trouble (under 5 minutes before move 40).",
+     "evidence": [
+      {
+       "game_id": "game-01",
+       "game": "Game 1",
+       "accuracy": 98.8,
+       "time_used": 6926,
+       "longest_think": 2174,
+       "longest_think_label": "17...Bb4",
+       "prep_time": 1515,
+       "reaction_to_novelty": null,
+       "errors": 0,
+       "time_trouble_moves": 3,
+       "missed_chances": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "game_id": "game-02",
+   "game": "Game 2",
+   "alerts": []
+  }
+ ],
+ "alerts_min_games": 3,
+ "generated_at": "2026-11-26T02:24:51+00:00"
 }
