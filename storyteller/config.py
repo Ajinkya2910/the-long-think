@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
@@ -27,7 +28,14 @@ class Config:
 
     @property
     def engine_path(self) -> str:
-        return os.environ.get("STOCKFISH_PATH") or self.raw["engine"]["path"]
+        """STOCKFISH_PATH, else the configured path if it resolves, else common install locations."""
+        configured = os.environ.get("STOCKFISH_PATH") or self.raw["engine"]["path"]
+        if shutil.which(configured):
+            return configured
+        for candidate in ("/opt/homebrew/bin/stockfish", "/usr/local/bin/stockfish", "/usr/games/stockfish", "/usr/bin/stockfish"):
+            if os.access(candidate, os.X_OK):
+                return candidate
+        return configured
 
     @property
     def lichess_token(self) -> str | None:
