@@ -232,50 +232,56 @@ SCHEMA = {
 }
 
 
+def claude_write(system: str, schema: dict, facts: dict, ncfg: dict, cache: Cache, ns: str, version: str, label: str) -> tuple[dict | None, dict | None]:
+    """Ask Claude for `schema` from `facts`; check moves and pronouns; one rewrite. Returns (result, rejected)."""
+    model = ncfg["model"]
+    key = hashlib.sha256(json.dumps([version, model, system, facts], sort_keys=True).encode()).hexdigest()
+    if (hit := cache.get(ns, key)) is not None:
+        return hit, None
+    import anthropic
+
+    client = anthropic.Anthropic()
+    messages = [{"role": "user", "content": json.dumps(facts, ensure_ascii=False)}]
+    for attempt in range(2):
+        resp = client.beta.messages.create(
+            model=model, max_tokens=16000, betas=["server-side-fallback-2026-07-01"], fallbacks="default",
+            system=system,
+            output_config={"effort": ncfg.get("effort", "medium"), "format": {"type": "json_schema", "schema": schema}},
+            messages=messages,
+        )
+        if resp.stop_reason in ("refusal", "max_tokens"):
+            log.warning("%s stopped (%s); using template", label, resp.stop_reason)
+            return None, {"problems": [resp.stop_reason]}
+        out = json.loads(next(b.text for b in resp.content if b.type == "text"))
+        text = _all_text(out)
+        problems = []
+        if (bad := ungrounded(text, facts)):
+            problems.append(f"it mentions moves that are not in the facts ({', '.join(bad)}); remove them or use moves from the facts")
+        if (pr := sorted({x.lower() for x in _PRONOUN.findall(text)})):
+            problems.append(f"it uses pronouns for players ({', '.join(pr)}); rephrase with the players' names so it still reads naturally")
+        if not problems:
+            break
+        if attempt == 0:
+            log.info("%s needs a rewrite: %s", label, "; ".join(problems))
+            messages += [{"role": "assistant", "content": resp.content},
+                         {"role": "user", "content": "Rewrite the same answer, changing nothing else, except: " + "; ".join(problems) + "."}]
+        else:
+            log.warning("%s still failed checks (%s); using template", label, "; ".join(problems))
+            return None, {"problems": problems}
+    result = {**out, "takeaways": [{"point": t["point"], "based_on": [k for k in t["based_on"] if k in facts]} for t in out["takeaways"]],
+              "source": "claude", "model": resp.model}
+    cache.put(ns, key, result)
+    return result, None
+
+
 def game_gist(doc: dict, ncfg: dict, cache: Cache, display: dict) -> dict:
     facts = gist_facts(doc, display)
     base = {**template(facts), "facts": facts}
     if not ncfg.get("enabled") or not _claude_available():
         return base
-    model = ncfg["model"]
-    key = hashlib.sha256(json.dumps([PROMPT_VERSION, model, SYSTEM, facts], sort_keys=True).encode()).hexdigest()
-    if (hit := cache.get("gist", key)) is not None:
-        return {**hit, "facts": facts}
     try:
-        import anthropic
-
-        client = anthropic.Anthropic()
-        messages = [{"role": "user", "content": json.dumps(facts, ensure_ascii=False)}]
-        for attempt in range(2):
-            resp = client.beta.messages.create(
-                model=model, max_tokens=16000, betas=["server-side-fallback-2026-07-01"], fallbacks="default",
-                system=SYSTEM,
-                output_config={"effort": ncfg.get("effort", "medium"), "format": {"type": "json_schema", "schema": SCHEMA}},
-                messages=messages,
-            )
-            if resp.stop_reason in ("refusal", "max_tokens"):
-                log.warning("gist stopped (%s); using template", resp.stop_reason)
-                return base
-            out = json.loads(next(b.text for b in resp.content if b.type == "text"))
-            text = _all_text(out)
-            problems = []
-            if (bad := ungrounded(text, facts)):
-                problems.append(f"it mentions moves that are not in the facts ({', '.join(bad)}); remove them or use moves from the facts")
-            if (pr := sorted({x.lower() for x in _PRONOUN.findall(text)})):
-                problems.append(f"it uses pronouns for players ({', '.join(pr)}); use the players' names instead")
-            if not problems:
-                break
-            if attempt == 0:
-                log.info("gist for %s needs a rewrite: %s", doc["id"], "; ".join(problems))
-                messages += [{"role": "assistant", "content": resp.content},
-                             {"role": "user", "content": "Rewrite the same answer, changing nothing else, except: " + "; ".join(problems) + "."}]
-            else:
-                log.warning("gist for %s still failed checks (%s); using template", doc["id"], "; ".join(problems))
-                return {**base, "rejected": {"problems": problems}}
-        result = {**out, "takeaways": [{"point": t["point"], "based_on": [k for k in t["based_on"] if k in facts]} for t in out["takeaways"]],
-                  "source": "claude", "model": resp.model}
-        cache.put("gist", key, result)
-        return {**result, "facts": facts}
+        out, rejected = claude_write(SYSTEM, SCHEMA, facts, ncfg, cache, "gist", PROMPT_VERSION, f"gist for {doc['id']}")
     except Exception as e:
         log.warning("gist failed for %s: %s; using template", doc["id"], e)
         return base
+    return {**out, "facts": facts} if out else {**base, "rejected": rejected}

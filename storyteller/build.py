@@ -91,7 +91,7 @@ def analyse_game(cfg: Config, cache: Cache, engine: Engine, game: ParsedGame, sk
     return doc
 
 
-def write_outputs(cfg: Config, docs: list[dict]) -> None:
+def write_outputs(cfg: Config, docs: list[dict], cache: Cache | None = None) -> None:
     out = cfg.web_data_dir
     (out / "games").mkdir(parents=True, exist_ok=True)
     display = cfg["match"].get("display", {})
@@ -123,7 +123,14 @@ def write_outputs(cfg: Config, docs: list[dict]) -> None:
     odds = win_probability(pairings, cfg["match_odds"], cfg["match"]["players"], display) if "match_odds" in cfg.raw else None
     rounds_path = cfg.data_dir / "raw" / "rounds.json"
     schedule = json.loads(rounds_path.read_text()) if rounds_path.exists() else []
+    alerts_min = int(cfg.raw.get("patterns", {}).get("alerts_min_games", 3))
+    alerts = alert_history(docs, display, alerts_min)
+    from .story import match_story
+    story = match_story(docs, odds, alerts, patterns, schedule, display, cfg["match"]["players"], cfg["narrative"], cache)
+    if story:
+        log.info("match story: %s (%s)", story["headline"], story["source"])
     match = {
+        "story": story,
         "schedule": schedule,
         "schema_version": SCHEMA_VERSION,
         "name": cfg["match"]["name"],
@@ -134,8 +141,8 @@ def write_outputs(cfg: Config, docs: list[dict]) -> None:
         "patterns": patterns,
         "opening_tree": opening_tree(docs),
         "win_probability": odds,
-        "alerts": alert_history(docs, display, int(cfg.raw.get("patterns", {}).get("alerts_min_games", 3))),
-        "alerts_min_games": int(cfg.raw.get("patterns", {}).get("alerts_min_games", 3)),
+        "alerts": alerts,
+        "alerts_min_games": alerts_min,
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
     }
     (out / "match.json").write_text(json.dumps(match, ensure_ascii=False, indent=1))

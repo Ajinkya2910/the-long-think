@@ -28,6 +28,22 @@ async function main() {
     ),
   ));
 
+  // ---------- story so far ----------
+  const st = match.story;
+  if (st?.sections?.length) {
+    app.append(h('section', { id: 'story' },
+      h('div', { class: 'card gist' },
+        h('div', { class: 'eyebrow' }, `The story so far · after ${played} ${played === 1 ? 'game' : 'games'}`),
+        h('h2', {}, st.headline),
+        h('p', { class: 'story-lede' }, st.summary),
+        h('div', { class: 'gist-sections' }, ...st.sections.map((x) => h('div', {}, h('h3', {}, x.title), h('p', {}, x.text)))),
+        st.takeaways?.length ? h('div', { class: 'reasons' }, h('div', { class: 'eyebrow' }, 'Patterns to watch'),
+          h('ul', {}, ...st.takeaways.map((t) => h('li', {}, t.point)))) : null,
+        h('details', {},
+          h('summary', {}, st.source === 'claude' ? `Written by ${st.model} from these facts; every move it names is checked against them · show facts` : 'Written from a template using these facts · show facts'),
+          h('pre', {}, JSON.stringify(st.facts, null, 2))))));
+  }
+
   // ---------- who is the favourite ----------
   const wp = match.win_probability;
   let drawOdds = () => {};

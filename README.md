@@ -113,6 +113,9 @@ Secrets come only from env vars or `.env`: `ANTHROPIC_API_KEY`, `YOUTUBE_API_KEY
   by Claude as a headline, a two-sentence summary, 3–4 sections and takeaways. Every move it names must appear in the
   facts and players are named rather than referred to with pronouns; otherwise one rewrite is requested, then a
   template is used. Game dates come from the broadcast's round start times (the PGN Date header is a placeholder).
+- **Match story so far** (`storyteller/story.py`): the same approach across all analysed games (results, openings and
+  prep times, clocks, accuracy, records and firsts, the rating model, and crowd opinion from closed collection windows),
+  shown at the top of the home page.
 - **Crowd mood** (`storyteller/crowd.py`, optional): for each game, the YouTube Data API finds recap videos published
   within 3 days of the round and reads their top comments (no usernames kept). Bluesky's public search (no key
   needed) adds every post naming either player between this round's start and the next round's start; it returns

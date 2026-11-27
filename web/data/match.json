@@ -1,4 +1,316 @@
 {
+ "story": {
+  "headline": "Three draws, zero errors: Gukesh and Sindarov locked at 1.5-1.5",
+  "summary": "After three of 14 scheduled games, Gukesh and Sindarov are level at 1.5-1.5, with every game drawn. The engine logged no inaccuracies, mistakes or blunders for either player in any game, but the games were not always calm: the clock got tight more than once, and Game 3 went 60 moves before the draw.",
+  "sections": [
+   {
+    "title": "Berlin walls and a quiet London",
+    "text": "With the white pieces, Sindarov twice met the Berlin Defense of the Ruy Lopez. In Game 1 Gukesh left theory with the novelty 13...Bd7, and Game 3 stayed in the book longest so far, until Sindarov's 14.a3. In between, Gukesh opened Game 2 with the London System, and Sindarov left theory with the quiet 11...Qd8 before a 20-move draw. One trend stands out: Gukesh's time used before leaving theory fell from 25m 15s to 16m 45s to just 1m 57s, while Sindarov's rose from 5m 17s to 7m 50s to 34m 45s."
+   },
+   {
+    "title": "Clock pressure in Games 1 and 3",
+    "text": "Gukesh got into time trouble for the first time in Game 1, dropping to 4m 40s after 36...Kg8, partly after a 36m 14s think on 17...Bb4. Game 3 was the tightest so far: Sindarov fell to just 8 seconds after 39.Bb4, the first time trouble for Sindarov in this match, while Gukesh had 4m 48s after 39...Bxb5. Both players set match highs for total thinking time in that game, 2h 26m for Sindarov and 2h 23m for Gukesh. Gukesh's longest think has shrunk each game, from 36m 14s to 29m 29s to 15m 51s."
+   },
+   {
+    "title": "Near-flawless on both sides",
+    "text": "Overall accuracy is almost identical, 98.9% for Gukesh and 98.8% for Sindarov, and both reached a match-high 99.2% in Game 3. In hard positions, both players have so far scored 100%: Gukesh over 6 moves and Sindarov over 10. Several key moments came quickly. Gukesh found the only safe king move 32...Kg8 in 12 seconds, and Sindarov found the only moves 38.Rh5 and 58.Bd2 in seconds. Game 3 ended with Sindarov holding a bishop and two pawns against Gukesh's bishop and three pawns."
+   },
+   {
+    "title": "What the ratings model says, and Game 4",
+    "text": "A rating model based on FIDE ratings, not on how the games were played, made Sindarov a heavy favourite before the match, at 92.1% to 7.9% for Gukesh. After three draws, that has eased to 88.4% for Sindarov and 11.6% for Gukesh. Game 4 is on 2026-11-28, with Gukesh playing White. For that game, the model gives 65.0% for a draw, 22.8% for a Sindarov win with Black and 12.2% for a Gukesh win."
+   }
+  ],
+  "takeaways": [
+   {
+    "point": "All three games were drawn with zero inaccuracies, mistakes or blunders recorded for either player.",
+    "based_on": [
+     "games",
+     "score",
+     "totals"
+    ]
+   },
+   {
+    "point": "Gukesh is reaching the end of opening preparation ever faster, while Sindarov is spending ever more time there, peaking at 34m 45s in Game 3.",
+    "based_on": [
+     "records_and_firsts",
+     "games"
+    ]
+   },
+   {
+    "point": "The rating model, built from ratings rather than the play, still has Sindarov as a strong favourite, though Gukesh's chances have edged up to 11.6%.",
+    "based_on": [
+     "rating_model"
+    ]
+   }
+  ],
+  "source": "claude",
+  "model": "claude-opus-5-5",
+  "facts": {
+   "players": [
+    "Gukesh",
+    "Sindarov"
+   ],
+   "games_played": 3,
+   "games_scheduled": 14,
+   "score": {
+    "Gukesh": 1.5,
+    "Sindarov": 1.5
+   },
+   "next_game": {
+    "name": "Game 4",
+    "date": "2026-11-28"
+   },
+   "games": [
+    {
+     "game": 1,
+     "date": "2026-11-24",
+     "white": "Sindarov",
+     "black": "Gukesh",
+     "result": "draw",
+     "moves": 38,
+     "opening": "Ruy Lopez: Berlin Defense, l'Hermet Variation, Berlin Wall Defense (C67)",
+     "left_theory": "13...Bd7 by Gukesh",
+     "time_used_before_leaving_theory": {
+      "Gukesh": "25m 15s",
+      "Sindarov": "5m 17s"
+     },
+     "players": {
+      "Sindarov": {
+       "accuracy_pct": 98.7,
+       "inaccuracies": 0,
+       "mistakes": 0,
+       "blunders": 0,
+       "time_used": "1h 44m",
+       "longest_think": "22m 52s on 14.c4",
+       "lowest_clock_before_move_40_bonus": "15m 51s after 38.Rh5"
+      },
+      "Gukesh": {
+       "accuracy_pct": 98.8,
+       "inaccuracies": 0,
+       "mistakes": 0,
+       "blunders": 0,
+       "time_used": "1h 55m",
+       "longest_think": "36m 14s on 17...Bb4",
+       "lowest_clock_before_move_40_bonus": "4m 40s after 36...Kg8"
+      }
+     },
+     "turning_points": [
+      "13...Bd7 (Gukesh, 15m 32s): Gukesh's long think produces a novelty, Bd7",
+      "17...Bb4 (Gukesh, 36m 14s): Gukesh spends 36 minutes finding the engine's choice",
+      "21.g4 (Sindarov, 8m 36s): Sindarov spends time choosing a pawn commitment",
+      "32...Kg8 (Gukesh, 12s): Gukesh finds the only safe king move quickly",
+      "38.Rh5 (Sindarov, 12s): Sindarov finds the only move in seconds"
+     ],
+     "final_material": {
+      "Sindarov": "2R 1B 1N 4P",
+      "Gukesh": "2R 1B 1N 4P"
+     },
+     "crowd_opinion": {
+      "youtube": {
+       "read": 414,
+       "picked_a_side": 57,
+       "backs_Gukesh_pct": 84,
+       "backs_Sindarov_pct": 16
+      },
+      "bluesky": {
+       "read": 186,
+       "picked_a_side": 19,
+       "backs_Gukesh_pct": 21,
+       "backs_Sindarov_pct": 79
+      }
+     }
+    },
+    {
+     "game": 2,
+     "date": "2026-11-25",
+     "white": "Gukesh",
+     "black": "Sindarov",
+     "result": "draw",
+     "moves": 20,
+     "opening": "Queen's Pawn Game: London System (D02)",
+     "left_theory": "11...Qd8 by Sindarov",
+     "time_used_before_leaving_theory": {
+      "Sindarov": "7m 50s",
+      "Gukesh": "16m 45s"
+     },
+     "players": {
+      "Gukesh": {
+       "accuracy_pct": 97.5,
+       "inaccuracies": 0,
+       "mistakes": 0,
+       "blunders": 0,
+       "time_used": "1h 17m",
+       "longest_think": "29m 29s on 16.f3",
+       "lowest_clock_before_move_40_bonus": "42m 13s after 20.Bg3"
+      },
+      "Sindarov": {
+       "accuracy_pct": 97.2,
+       "inaccuracies": 0,
+       "mistakes": 0,
+       "blunders": 0,
+       "time_used": "38m 34s",
+       "longest_think": "10m 43s on 12...Rc8",
+       "lowest_clock_before_move_40_bonus": "1h 21m after 20...Nf6"
+      }
+     },
+     "turning_points": [
+      "8.Rb1 (Gukesh, 6m 10s): Gukesh spends six minutes on a book move",
+      "11...Qd8 (Sindarov, 2m 41s): Sindarov leaves theory with a quiet Qd8",
+      "13...Be8 (Sindarov, 4m 31s): Sindarov spends time on a quiet bishop retreat",
+      "16.f3 (Gukesh, 29m 29s): Gukesh spends half an hour on 16.f3",
+      "20.Bg3 (Gukesh, 19s): Gukesh finds the engine's top move quickly"
+     ],
+     "final_material": {
+      "Gukesh": "1Q 2R 2B 1N 8P",
+      "Sindarov": "1Q 2R 2B 1N 8P"
+     },
+     "crowd_opinion": {
+      "youtube": {
+       "read": 251,
+       "picked_a_side": 21,
+       "backs_Gukesh_pct": 38,
+       "backs_Sindarov_pct": 62
+      }
+     }
+    },
+    {
+     "game": 3,
+     "date": "2026-11-26",
+     "white": "Sindarov",
+     "black": "Gukesh",
+     "result": "draw",
+     "moves": 60,
+     "opening": "Ruy Lopez: Berlin Defense, Cordel Variation (C67)",
+     "left_theory": "14.a3 by Sindarov",
+     "time_used_before_leaving_theory": {
+      "Sindarov": "34m 45s",
+      "Gukesh": "1m 57s"
+     },
+     "players": {
+      "Sindarov": {
+       "accuracy_pct": 99.2,
+       "inaccuracies": 0,
+       "mistakes": 0,
+       "blunders": 0,
+       "time_used": "2h 26m",
+       "longest_think": "16m 06s on 21.c3",
+       "lowest_clock_before_move_40_bonus": "8s after 39.Bb4"
+      },
+      "Gukesh": {
+       "accuracy_pct": 99.2,
+       "inaccuracies": 0,
+       "mistakes": 0,
+       "blunders": 0,
+       "time_used": "2h 23m",
+       "longest_think": "15m 51s on 29...gxf4",
+       "lowest_clock_before_move_40_bonus": "4m 48s after 39...Bxb5"
+      }
+     },
+     "turning_points": [
+      "14.a3 (Sindarov, 7m 00s): Sindarov leaves theory with a thoughtful a3",
+      "16...Qxd4 (Gukesh, 11m 00s): Gukesh finds the only good queen capture",
+      "29...gxf4 (Gukesh, 15m 51s): Gukesh spends nearly sixteen minutes on gxf4",
+      "49.Bxe1 (Sindarov, 49s): Sindarov finds the only move to hold",
+      "58.Bd2 (Sindarov, 10s): Sindarov finds the only saving bishop move quickly"
+     ],
+     "final_material": {
+      "Sindarov": "1B 2P",
+      "Gukesh": "1B 3P"
+     },
+     "crowd_opinion": null
+    }
+   ],
+   "totals": {
+    "Gukesh": {
+     "points": 1.5,
+     "accuracy_pct": 98.9,
+     "share_of_time_by_phase_pct": {
+      "opening": 13.1,
+      "middlegame": 59.6,
+      "endgame": 27.3
+     },
+     "accuracy_by_think_length": {
+      "< 1 min": "99.5% over 44 moves",
+      "1–5 min": "98.1% over 19 moves",
+      "5–15 min": "98.5% over 14 moves",
+      "> 15 min": "97.8% over 4 moves"
+     },
+     "accuracy_in_hard_positions": "100.0% over 6 moves",
+     "novelties_played": 1,
+     "average_time_used_before_leaving_theory": "14m 39s"
+    },
+    "Sindarov": {
+     "points": 1.5,
+     "accuracy_pct": 98.8,
+     "share_of_time_by_phase_pct": {
+      "opening": 16.6,
+      "middlegame": 64.3,
+      "endgame": 19.2
+     },
+     "accuracy_by_think_length": {
+      "< 1 min": "99.5% over 40 moves",
+      "1–5 min": "98.4% over 25 moves",
+      "5–15 min": "97.6% over 11 moves",
+      "> 15 min": "97.1% over 5 moves"
+     },
+     "accuracy_in_hard_positions": "100.0% over 10 moves",
+     "novelties_played": 2,
+     "average_time_used_before_leaving_theory": "15m 57s"
+    }
+   },
+   "rating_model": {
+    "what_it_is": "a rating model (FIDE ratings, White bonus, fixed draw rate), not the engine's view of the games",
+    "match_win_pct_by_stage": [
+     {
+      "stage": "Before Game 1",
+      "Gukesh": 7.9,
+      "Sindarov": 92.1,
+      "tiebreak": 7.6
+     },
+     {
+      "stage": "After Game 1",
+      "Gukesh": 9.6,
+      "Sindarov": 90.4,
+      "tiebreak": 9.0
+     },
+     {
+      "stage": "After Game 2",
+      "Gukesh": 9.5,
+      "Sindarov": 90.5,
+      "tiebreak": 9.4
+     },
+     {
+      "stage": "After Game 3",
+      "Gukesh": 11.6,
+      "Sindarov": 88.4,
+      "tiebreak": 11.2
+     }
+    ],
+    "next_game": {
+     "game": 4,
+     "white": "Gukesh",
+     "black": "Sindarov",
+     "white_win_pct": 12.2,
+     "draw_pct": 65.0,
+     "black_win_pct": 22.8
+    }
+   },
+   "records_and_firsts": [
+    "Game 1: the first time Gukesh got into time trouble (under 5 minutes before move 40).",
+    "Game 3: Gukesh set the least time used before leaving theory in any game so far: 1m 57s (previous low 16m 45s).",
+    "Game 3: Gukesh set the highest accuracy of the match so far: 99.2% (previous high 98.8%).",
+    "Game 3: Gukesh set the most total thinking time in a game so far: 2h 23m (previous high 1h 55m).",
+    "Gukesh's time used before leaving theory fell for the second game in a row (25m 15s → 16m 45s → 1m 57s).",
+    "Gukesh's longest think fell for the second game in a row (36m 14s → 29m 29s → 15m 51s).",
+    "Game 3: Sindarov set the most time used before leaving theory in any game so far: 34m 45s (previous high 7m 50s).",
+    "Game 3: Sindarov set the highest accuracy of the match so far: 99.2% (previous high 98.7%).",
+    "Game 3: Sindarov set the most total thinking time in a game so far: 2h 26m (previous high 1h 44m).",
+    "Sindarov's time used before leaving theory rose for the second game in a row (5m 17s → 7m 50s → 34m 45s).",
+    "Game 3: the first time Sindarov got into time trouble (under 5 minutes before move 40).",
+    "Game 3 stayed in theory longest so far, until 14.a3 (previous deepest: move 13)."
+   ]
+  }
+ },
  "schedule": [
   {
    "id": "xLgOJ6cb",
@@ -5894,5 +6206,5 @@
   }
  ],
  "alerts_min_games": 3,
- "generated_at": "2026-11-27T22:59:58+00:00"
+ "generated_at": "2026-11-27T23:07:27+00:00"
 }

@@ -41,3 +41,15 @@ def test_template_without_claude(doc, monkeypatch, tmp_path):
     text = " ".join(s["text"] for s in out["sections"])
     assert gist.ungrounded(text, out["facts"]) == []
     assert not gist._PRONOUN.search(text)
+
+
+def test_match_story_template_and_facts(doc, monkeypatch):
+    from storyteller import story
+    for k in ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_PROFILE"):
+        monkeypatch.delenv(k, raising=False)
+    players = ["Gukesh D", "Sindarov, Javokhir"]
+    patterns = {"players": {}}
+    out = story.match_story([doc], None, [], patterns, [], DISPLAY, players, {"enabled": True, "model": "x"}, None)
+    assert out["source"] == "template" and out["facts"]["games"][0]["game"] == 3
+    text = " ".join(s["text"] for s in out["sections"])
+    assert gist.ungrounded(text, out["facts"]) == [] and not gist._PRONOUN.search(text)

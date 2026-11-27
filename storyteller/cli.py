@@ -60,7 +60,7 @@ def main(argv: list[str] | None = None) -> None:
     fix_dates(cfg, docs)
     add_crowd(cfg, cache, docs, refresh=args.refresh_crowd)
     add_gists(cfg, cache, docs)
-    write_outputs(cfg, docs)
+    write_outputs(cfg, docs, cache)
 
 
 def round_starts(cfg) -> dict[int, int]:
