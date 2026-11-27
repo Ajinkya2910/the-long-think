@@ -108,6 +108,11 @@ Secrets come only from env vars or `.env`: `ANTHROPIC_API_KEY`, `YOUTUBE_API_KEY
   a bonus for White and a fixed draw rate; an exact calculation over all remaining games (first to 7.5, a 7–7 tie
   goes to tiebreaks) gives each player's chance after every game. The shaded band uses the low and high draw
   rates from `[match_odds]`. It's a rating model, not the engine's opinion of the games.
+- **Game gist** (`storyteller/gist.py`): a facts pack for the whole game (opening and prep, engine edge per phase,
+  turning points, errors, clocks including the lowest clock before the move-40 bonus, final material) is written up
+  by Claude as a headline, a two-sentence summary, 3–4 sections and takeaways. Every move it names must appear in the
+  facts and players are named rather than referred to with pronouns; otherwise one rewrite is requested, then a
+  template is used. Game dates come from the broadcast's round start times (the PGN Date header is a placeholder).
 - **Crowd mood** (`storyteller/crowd.py`, optional): for each game, the YouTube Data API finds recap videos published
   within 3 days of the round and reads their top comments (no usernames kept). Bluesky's public search (no key
   needed) adds every post naming either player between this round's start and the next round's start; it returns

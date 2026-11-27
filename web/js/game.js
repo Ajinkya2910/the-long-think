@@ -49,7 +49,7 @@ function render(game) {
       h('div', { class: 'eyebrow' }, `Round ${game.round?.split('.')[0]} · ${game.date?.replaceAll('.', '-')} · ${game.eco || ''} ${game.opening_name || ''}`),
       h('h1', {}, h('span', { class: 'dot', style: `background:var(--p${W.slot});width:14px;height:14px;margin-right:10px` }), `${wn} `, h('span', { class: 'muted' }, 'vs'), ` ${bn}`,
         h('span', { class: 'dot', style: `background:var(--p${B.slot});width:14px;height:14px;margin-left:10px` })),
-      h('p', {}, `${resultText} in ${Math.ceil(N / 2)} moves. ${wn} had White. ${storyLine(game, wn, bn)}`),
+      h('p', {}, `${resultText} in ${Math.ceil(N / 2)} moves. ${wn} had White. ${game.gist?.source === 'claude' ? game.gist.summary : storyLine(game, wn, bn)}`),
     ),
     h('section', { class: 'stats' },
       stat('Prep ended', nov ? nov.label : '—', nov ? `${shortName(game.players[nov.side])} left the masters database` : 'book data unavailable'),
@@ -57,6 +57,7 @@ function render(game) {
       stat('Critical moments', String(game.critical_moments.length), 'ranked by eval swing, time and difficulty'),
       stat('Accuracy', `${summ.players.white.accuracy ?? '—'} · ${summ.players.black.accuracy ?? '—'}`, `${wn} · ${bn} (non-book moves)`),
     ),
+    h('section', { id: 'gist' }),
   );
 
   // ---------- layout ----------
@@ -239,6 +240,9 @@ function render(game) {
   // ---------- patterns in this game ----------
   renderEvents(game, $('#events'), (ply) => { go(ply + 1); scrollTo({ top: 0, behavior: 'smooth' }); });
 
+  // ---------- game gist ----------
+  renderGist(game, $('#gist'), (ply) => { go(ply + 1); $('.board-wrap')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
+
   // ---------- crowd mood ----------
   renderCrowd(game, $('#crowd'), (ply) => { go(ply + 1); scrollTo({ top: 0, behavior: 'smooth' }); });
 
@@ -338,6 +342,35 @@ function renderEvents(game, el, jump) {
   el.append(rx, pc, mc);
 }
 
+// Turn move labels in text ("21.c3", "29...gxf4") into buttons that load the move on the board.
+function withMoves(text, game, jump) {
+  const plyOf = new Map(game.moves.map((m) => [m.label.replace(/[+#]$/, ''), m.ply]));
+  const out = [];
+  let last = 0;
+  for (const mt of text.matchAll(/\b\d+\.(?:\.\.)?[KQRBNa-hO][\w=+#-]*/g)) {
+    const lbl = mt[0].replace(/[+#]$/, '');
+    if (!plyOf.has(lbl)) continue;
+    out.push(text.slice(last, mt.index), h('button', { class: 'mv', onclick: () => jump(plyOf.get(lbl)) }, mt[0]));
+    last = mt.index + mt[0].length;
+  }
+  out.push(text.slice(last));
+  return out;
+}
+
+function renderGist(game, el, jump) {
+  const g = game.gist;
+  if (!g || !g.sections?.length) return;
+  el.append(h('div', { class: 'card gist' },
+    h('div', { class: 'eyebrow' }, 'How the game went'),
+    h('h2', {}, g.headline),
+    h('div', { class: 'gist-sections' }, ...g.sections.map((x) => h('div', {}, h('h3', {}, x.title), h('p', {}, ...withMoves(x.text, game, jump))))),
+    g.takeaways?.length ? h('div', { class: 'reasons' }, h('div', { class: 'eyebrow' }, 'Worth remembering'),
+      h('ul', {}, ...g.takeaways.map((t) => h('li', {}, ...withMoves(t.point, game, jump))))) : null,
+    h('details', {},
+      h('summary', {}, g.source === 'claude' ? `Written by ${g.model} from these facts; every move it names is checked against them · show facts` : 'Written from a template using these facts · show facts'),
+      h('pre', {}, JSON.stringify(g.facts, null, 2)))));
+}
+
 const SOURCES = {
   youtube: { name: 'YouTube', unit: 'comments', q: 'Who do commenters think will win the match?' },
   bluesky: { name: 'Bluesky', unit: 'posts', q: 'Who do Bluesky posters think will win the match?' },
@@ -425,7 +458,7 @@ function storyLine(game, wn, bn) {
     bits.push(`Theory ran out at ${s.novelty.label}, played by ${who} after using ${dur(used)} (${shortName(game.players[other])} had used ${dur(s.players[other].time_before_novelty)}).`);
   }
   const tt = ['white', 'black'].filter((x) => s.players[x].time_trouble_moves > 0);
-  for (const x of tt) bits.push(`${shortName(game.players[x])} played ${s.players[x].time_trouble_moves} moves before move 40 with under 5 minutes left.`);
+  for (const x of tt) bits.push(`${shortName(game.players[x])} played ${s.players[x].time_trouble_moves} ${s.players[x].time_trouble_moves === 1 ? 'move' : 'moves'} before move 40 with under 5 minutes left.`);
   return bits.join(' ');
 }
 

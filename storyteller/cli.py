@@ -57,8 +57,44 @@ def main(argv: list[str] | None = None) -> None:
             docs.append(analyse_game(cfg, cache, engine, g, skip_opening=args.skip_opening))
     finally:
         engine.close()
+    fix_dates(cfg, docs)
     add_crowd(cfg, cache, docs, refresh=args.refresh_crowd)
+    add_gists(cfg, cache, docs)
     write_outputs(cfg, docs)
+
+
+def round_starts(cfg) -> dict[int, int]:
+    rounds_path = cfg.data_dir / "raw" / "rounds.json"
+    starts = {}
+    if rounds_path.exists():
+        for r in json.loads(rounds_path.read_text()):
+            num = str(r.get("name", "")).split()[-1]
+            if num.isdigit() and r.get("startsAt"):
+                starts[int(num)] = r["startsAt"]
+    return starts
+
+
+def _round(doc) -> int:
+    return int(str(doc.get("round") or "0").split(".")[0] or 0)
+
+
+def fix_dates(cfg, docs):
+    """The broadcast PGNs carry a placeholder Date header; use the round's real start date."""
+    from datetime import datetime, timezone
+
+    starts = round_starts(cfg)
+    for doc in docs:
+        if (ms := starts.get(_round(doc))):
+            doc["date"] = datetime.fromtimestamp(ms / 1000, tz=timezone.utc).strftime("%Y.%m.%d")
+
+
+def add_gists(cfg, cache, docs):
+    from .gist import game_gist
+
+    display = cfg["match"].get("display", {})
+    for doc in docs:
+        doc["gist"] = game_gist(doc, cfg["narrative"], cache, display)
+        logging.info("[%s] gist: %s (%s)", doc["id"], doc["gist"]["headline"], doc["gist"]["source"])
 
 
 def add_crowd(cfg, cache, docs, refresh=False):
@@ -67,17 +103,11 @@ def add_crowd(cfg, cache, docs, refresh=False):
 
     if "crowd" not in cfg.raw:
         return
-    rounds_path = cfg.data_dir / "raw" / "rounds.json"
-    starts = {}
-    if rounds_path.exists():
-        for r in json.loads(rounds_path.read_text()):
-            num = str(r.get("name", "")).split()[-1]
-            if num.isdigit():
-                starts[int(num)] = r.get("startsAt")
+    starts = round_starts(cfg)
     display = cfg["match"].get("display", {})
     players = cfg["match"]["players"]
     for doc in docs:
-        rnd = int(str(doc.get("round") or "0").split(".")[0] or 0)
+        rnd = _round(doc)
         merged = normalise(doc.get("crowd"))
         merged.update(crowd_for_game(cfg["crowd"], cache, doc, rnd, starts.get(rnd), players, display, refresh, starts.get(rnd + 1)) or {})
         if merged:
