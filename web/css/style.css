@@ -231,3 +231,17 @@ cg-board { border-radius: 6px; }
 
 .reasons { margin: 0 0 12px; padding: 10px 12px; background: var(--surface-2); border-radius: 10px; }
 .reasons ul { margin: 6px 0 0; padding-left: 18px; color: var(--ink-2); font-size: 14px; display: grid; gap: 4px; }
+
+/* crowd mood */
+.crowd { padding: 16px 18px; }
+.crowd h3 { font-size: 19px; margin: 2px 0 10px; }
+.stack { display: flex; height: 26px; border-radius: 6px; overflow: hidden; gap: 2px; margin: 6px 0 4px; }
+.stack div { display: grid; place-items: center; color: #fff; font-size: 12px; font-weight: 600; min-width: 0; white-space: nowrap; overflow: hidden; }
+.stack .none { background: var(--rule); color: var(--ink-2); }
+.stack-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-2); }
+.crowd-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 24px; margin-top: 14px; }
+@media (max-width: 760px) { .crowd-grid { grid-template-columns: minmax(0, 1fr); } }
+.crowd .sub { font: 600 12px var(--sans); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 6px; }
+.crowd .videos { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; font-size: 13.5px; }
+.crowd .videos a { color: var(--ink); }
+.agree-yes { color: var(--best); font-weight: 700; } .agree-no { color: var(--critical); font-weight: 700; }

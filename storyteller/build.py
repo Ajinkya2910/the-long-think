@@ -115,6 +115,8 @@ def write_outputs(cfg: Config, docs: list[dict]) -> None:
             "longest_think": doc["summary"]["longest_think"],
             "critical_count": doc["summary"]["critical_count"],
             "accuracy": {s: doc["summary"]["players"][s]["accuracy"] for s in ("white", "black")},
+            "crowd": ({"favours": doc["crowd"]["favours"], "comments": doc["crowd"]["comments_labelled"], "game_feel": doc["crowd"].get("game_feel")}
+                      if doc.get("crowd", {}).get("comments_labelled") else None),
             "sparkline": [round(doc["moves"][0]["eval_before"]["wp"], 1)] + [round(m["eval_after"]["wp"], 1) for m in doc["moves"]],
         })
     pairings = read_pairings(sorted((cfg.data_dir / "raw").glob("*.pgn")))

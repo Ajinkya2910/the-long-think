@@ -54,6 +54,24 @@ async function main() {
         chartEl,
         h('p', { class: 'note' }, wp.assumptions.text, ' Ratings decide most of this; results update it game by game.'),
         tableBtn, tableWrap));
+    const crowdGames = match.games.filter((g) => g.crowd);
+    if (crowdGames.length) {
+      app.append(h('div', { class: 'card crowd', style: 'margin-top:14px' },
+        h('div', { class: 'eyebrow' }, 'Crowd mood · YouTube'),
+        h('h3', {}, 'Who commenters back, game by game'),
+        ...crowdGames.map((g) => {
+          const c = g.crowd;
+          const picks = Object.entries(c.favours.keys).map(([k, name]) => ({ label: nm(name), v: c.favours.counts[k], bg: color(name) }));
+          const total = picks.reduce((t, x) => t + x.v, 0);
+          return h('div', { style: 'display:grid;grid-template-columns:70px 1fr 170px;gap:10px;align-items:center;margin:6px 0' },
+            h('a', { href: `game.html?id=${g.id}#crowd`, style: 'font-weight:600;text-decoration:none' }, `Game ${parseInt(g.round, 10)}`),
+            total ? h('div', { class: 'stack', style: 'margin:0' }, ...picks.filter((x) => x.v).map((x) => h('div', { style: `flex:${x.v};background:${x.bg}`, title: `${x.label}: ${x.v} of ${total} (${Math.round((100 * x.v) / total)}%)` }, `${Math.round((100 * x.v) / total)}%`)))
+              : h('span', { class: 'muted' }, 'nobody picked a side'),
+            h('span', { class: 'muted', style: 'font-size:12.5px' }, `${total} of ${c.comments} comments pick a side`));
+        }),
+        h('div', { class: 'stack-legend', style: 'margin-top:6px' }, ...names.map((n) => h('span', {}, h('span', { class: 'dot', style: `background:${color(n)}` }), ` backs ${nm(n)}`))),
+        h('p', { class: 'note' }, 'Among YouTube comments that say who will or should win the match. Most comments don’t pick a side, and each channel’s audience leans its own way, so read this as mood, not a forecast; compare it with the rating model above.')));
+    }
     drawOdds = probChart(chartEl, {
       series: wp.series, games: wp.games,
       players: names.map((n) => ({ name: n, short: nm(n), color: color(n) })),

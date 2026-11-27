@@ -108,6 +108,7 @@ function render(game) {
         clockEl, tableBtn, tableWrap),
       h('div', { class: 'section-h' }, h('h2', {}, 'Patterns in this game'), h('span', { class: 'muted' }, 'Click a move to load it on the board')),
       h('div', { class: 'events', id: 'events' }),
+      h('div', { id: 'crowd' }),
       h('div', { class: 'section-h' }, h('h2', {}, 'Critical moments'), h('span', { class: 'muted' }, 'Click a card to load it on the board')),
       h('div', { class: 'moments', id: 'moments' }),
     ),
@@ -238,6 +239,9 @@ function render(game) {
   // ---------- patterns in this game ----------
   renderEvents(game, $('#events'), (ply) => { go(ply + 1); scrollTo({ top: 0, behavior: 'smooth' }); });
 
+  // ---------- crowd mood ----------
+  renderCrowd(game, $('#crowd'), (ply) => { go(ply + 1); scrollTo({ top: 0, behavior: 'smooth' }); });
+
   // ---------- critical moment cards ----------
   const mom = $('#moments');
   if (!game.critical_moments.length) mom.append(h('p', { class: 'muted' }, 'No critical moments detected.'));
@@ -332,6 +336,48 @@ function renderEvents(game, el, jump) {
       ` gave back ${m.given_back.toFixed(0)}. The engine’s reply was ${m.best_reply ?? '—'}${m.best_reply_eval != null ? ` (${pawns(m.best_reply_eval)})` : ''}.`)))));
 
   el.append(rx, pc, mc);
+}
+
+function renderCrowd(game, el, jump) {
+  const c = game.crowd;
+  if (!c || !c.comments_labelled) return;
+  const keys = c.favours.keys;               // {gukesh: 'Gukesh D', ...}
+  const slotOf = (name) => (game.players.white.name === name ? game.players.white.slot : game.players.black.slot);
+  const shortOf = (name) => shortName(game.players.white.name === name ? game.players.white : game.players.black);
+  const n = c.comments_labelled;
+  const pct = (x) => Math.round((100 * x) / n);
+  const picks = Object.entries(keys).map(([k, name]) => ({ label: shortOf(name), v: c.favours.counts[k], bg: `var(--p${slotOf(name)})` }));
+  const total = picks.reduce((t, x) => t + x.v, 0);
+  const share = (v) => (total ? Math.round((100 * v) / total) : 0);
+  const stack = total
+    ? h('div', { class: 'stack', role: 'img', 'aria-label': picks.map((x) => `${x.label} ${share(x.v)}%`).join(', ') },
+      ...picks.filter((x) => x.v).map((x) => h('div', { style: `flex:${x.v};background:${x.bg}`, title: `${x.label}: ${x.v} of ${total} comments` }, share(x.v) >= 8 ? `${share(x.v)}%` : '')))
+    : h('p', { class: 'ink2' }, 'No comment picked a side.');
+  const legend = h('div', { class: 'stack-legend' }, ...picks.map((x) => h('span', {}, h('span', { class: 'dot', style: `background:${x.bg}` }), ` backs ${x.label}: ${x.v}`)),
+    h('span', {}, `${total} of ${n} comments (${pct(total)}%) pick a side`));
+  const tone = h('div', {}, h('div', { class: 'sub' }, 'Tone toward each player'),
+    ...Object.entries(keys).map(([k, name]) => h('div', { style: 'font-size:14px;margin:4px 0' },
+      h('span', { class: 'dot', style: `background:var(--p${slotOf(name)})` }), ` ${shortOf(name)}: `,
+      h('b', {}, `${c.tone[k].positive}`), ' positive · ', h('b', {}, `${c.tone[k].negative}`), ' negative')),
+    h('div', { style: 'font-size:14px;margin-top:8px' }, 'The game felt ', h('b', {}, 'exciting'), ` to ${c.game_feel.exciting}, `, h('b', {}, 'boring'), ` to ${c.game_feel.boring}`));
+  const movesBox = h('div', { style: 'grid-column:1 / -1' }, h('div', { class: 'sub' }, 'Moves people talked about · engine vs crowd'));
+  if (!c.moves.length) movesBox.append(h('p', { class: 'ink2', style: 'margin:0;font-size:14px' }, `No move got ${c.min_mentions}+ opinions.`));
+  else movesBox.append(h('table', { class: 'cmp', style: 'max-width:none' },
+    h('thead', {}, h('tr', {}, ...['Move', 'Praise · criticism', 'Crowd says', 'Engine says', 'Agree?'].map((t) => h('th', {}, t)))),
+    h('tbody', {}, ...c.moves.slice(0, 8).map((m) => h('tr', {},
+      h('td', {}, h('button', { class: 'mv', onclick: () => jump(m.ply) }, m.label), m.ambiguous ? h('span', { class: 'muted', title: 'This move was played more than once; matched to the first time' }, ' *') : null),
+      h('td', {}, `${m.praise} · ${m.criticism}`), h('td', {}, m.crowd), h('td', {}, m.engine),
+      h('td', {}, m.agrees == null ? '–' : h('span', { class: m.agrees ? 'agree-yes' : 'agree-no' }, m.agrees ? 'yes' : 'no')))))));
+  const vids = h('div', {}, h('div', { class: 'sub' }, `Videos read (${c.videos.length})`),
+    h('ul', { class: 'videos' }, ...c.videos.map((v) => h('li', {}, h('a', { href: v.url, target: '_blank', rel: 'noopener' }, v.title), h('span', { class: 'muted' }, ` · ${v.channel} · ${v.comments_read} comments`)))));
+  el.append(
+    h('div', { class: 'section-h' }, h('h2', {}, 'What viewers said'), h('span', { class: 'muted' }, 'Opinion, not fact')),
+    h('div', { class: 'card crowd' },
+      h('div', { class: 'eyebrow' }, 'Crowd mood · YouTube'),
+      h('h3', {}, 'Who do commenters think will win the match?'),
+      stack, legend,
+      h('div', { class: 'crowd-grid' }, tone, vids, movesBox),
+      h('p', { class: 'note' }, `${n} public comments from the videos above, labelled by ${c.model || 'Claude'}. Only counts are published; usernames and comment text are not stored on this site. Fetched ${new Date(c.fetched_at).toLocaleDateString()}.`)));
 }
 
 function stat(label, value, sub) {

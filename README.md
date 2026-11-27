@@ -76,9 +76,10 @@ Results are cached by a hash of the facts, so you pay once per moment. Without a
 | `[critical]` | number of moments, minimum spacing, weights for eval swing / time / difficulty, novelty bonus |
 | `[patterns]` | prep-payoff horizon, missed-chance thresholds, games needed before records are reported |
 | `[match_odds]` | draw rate (and range for the band), White bonus in rating points |
+| `[crowd]` | YouTube search text, videos per game, comments per video, labelling model and batch size |
 | `[narrative]` | on/off, model, effort |
 
-Secrets come only from env vars: `ANTHROPIC_API_KEY`, `LICHESS_TOKEN`, plus `STOCKFISH_PATH` and `ENGINE_DEPTH` overrides.
+Secrets come only from env vars or `.env`: `ANTHROPIC_API_KEY`, `YOUTUBE_API_KEY`, `LICHESS_TOKEN`, plus `STOCKFISH_PATH` and `ENGINE_DEPTH` overrides.
 
 ## How things are computed
 
@@ -107,6 +108,11 @@ Secrets come only from env vars: `ANTHROPIC_API_KEY`, `LICHESS_TOKEN`, plus `STO
   a bonus for White and a fixed draw rate; an exact calculation over all remaining games (first to 7.5, a 7–7 tie
   goes to tiebreaks) gives each player's chance after every game. The shaded band uses the low and high draw
   rates from `[match_odds]`. It's a rating model, not the engine's opinion of the games.
+- **Crowd mood** (`storyteller/crowd.py`, optional): for each game, the YouTube Data API finds recap videos published
+  within 3 days of the round and reads their top comments (no usernames kept). Claude Haiku labels each comment
+  (who it backs, tone toward each player, exciting/boring, opinions on specific moves); moves are checked against
+  the game. Only counts are published, plus "engine vs crowd" for moves with 3+ opinions. Needs `YOUTUBE_API_KEY`;
+  raw comments stay in the local cache. `--refresh-crowd` re-fetches.
 - **Phases**: opening = book moves; endgame = 6 or fewer pieces besides kings and pawns; middlegame otherwise.
 
 ## Project layout

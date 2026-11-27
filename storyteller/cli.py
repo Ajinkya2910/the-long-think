@@ -28,6 +28,7 @@ def main(argv: list[str] | None = None) -> None:
     run.add_argument("--refresh", action="store_true", help="re-download PGNs even if cached")
     run.add_argument("--depth", type=int, help="override engine depth")
     run.add_argument("--skip-opening", action="store_true")
+    run.add_argument("--refresh-crowd", action="store_true", help="re-fetch YouTube videos/comments (uses API quota)")
     run.add_argument("-v", "--verbose", action="store_true")
     args = ap.parse_args(argv)
 
@@ -56,7 +57,31 @@ def main(argv: list[str] | None = None) -> None:
             docs.append(analyse_game(cfg, cache, engine, g, skip_opening=args.skip_opening))
     finally:
         engine.close()
+    add_crowd(cfg, cache, docs, refresh=args.refresh_crowd)
     write_outputs(cfg, docs)
+
+
+def add_crowd(cfg, cache, docs, refresh=False):
+    """Attach YouTube crowd mood to each game (kept from disk if no key is set)."""
+    from .crowd import crowd_for_game
+
+    if "crowd" not in cfg.raw:
+        return
+    rounds_path = cfg.data_dir / "raw" / "rounds.json"
+    starts = {}
+    if rounds_path.exists():
+        for r in json.loads(rounds_path.read_text()):
+            num = str(r.get("name", "")).split()[-1]
+            if num.isdigit():
+                starts[int(num)] = r.get("startsAt")
+    display = cfg["match"].get("display", {})
+    players = cfg["match"]["players"]
+    for doc in docs:
+        rnd = int(str(doc.get("round") or "0").split(".")[0] or 0)
+        crowd = crowd_for_game(cfg["crowd"], cache, doc, rnd, starts.get(rnd), players, display, refresh)
+        if crowd is not None:
+            doc["crowd"] = crowd
+            logging.info("[%s] crowd: %s comments from %d videos", doc["id"], crowd.get("comments_labelled"), len(crowd.get("videos", [])))
 
 
 if __name__ == "__main__":
