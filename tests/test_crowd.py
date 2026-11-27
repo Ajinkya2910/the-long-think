@@ -88,3 +88,69 @@ def test_collect_dedupes_drops_short_and_never_keeps_authors(tmp_path, monkeypat
 def test_disabled_without_key(monkeypatch, tmp_path):
     monkeypatch.delenv("YOUTUBE_API_KEY", raising=False)
     assert crowd.crowd_for_game({"enabled": True}, Cache(tmp_path / "c.sqlite"), doc(), 1, 1, PLAYERS, DISPLAY) is None
+
+
+# ---------------------------------------------------------------- Bluesky
+
+from datetime import datetime, timedelta, timezone
+
+T0 = datetime(2026, 11, 24, 14, tzinfo=timezone.utc)
+
+
+def fake_bsky(posts_by_minute):
+    """posts_by_minute: {minute offset from T0: text}. Mimics the 100-per-request cap."""
+    calls = []
+
+    def search(term, since, until):
+        calls.append((term, since, until))
+        hits = [(m, t) for m, t in posts_by_minute.items() if term in t and since <= T0 + timedelta(minutes=m) < until]
+        hits.sort(key=lambda x: -x[0])
+        return [{"id": f"bs-{m}", "text": t, "likes": 0, "reposts": 0, "published": (T0 + timedelta(minutes=m)).isoformat(), "langs": []}
+                for m, t in hits[:100]]
+    return search, calls
+
+
+def test_bluesky_window_stops_at_next_round_and_now():
+    start, nxt = int(T0.timestamp() * 1000), int((T0 + timedelta(hours=24)).timestamp() * 1000)
+    since, until, closed = crowd.bluesky_window(start, nxt, 48, now=T0 + timedelta(days=3))
+    assert (since, until, closed) == (T0, T0 + timedelta(hours=24), True)
+    since, until, closed = crowd.bluesky_window(start, None, 48, now=T0 + timedelta(hours=5))
+    assert until == T0 + timedelta(hours=5) and not closed
+
+
+def test_bluesky_splits_full_slices_and_merges_terms(tmp_path):
+    posts = {m: f"gukesh plays move number {m}" for m in range(0, 1440, 4)}     # 360 posts in 24h: needs splitting
+    posts.update({m: f"sindarov holds the draw {m}" for m in range(1, 1440, 30)})
+    posts[3] = "gukesh and sindarov shake hands"                                # matches both terms: kept once
+    search, calls = fake_bsky(posts)
+    start, nxt = int(T0.timestamp() * 1000), int((T0 + timedelta(hours=24)).timestamp() * 1000)
+    cfg = {"max_window_hours": 48, "min_slice_minutes": 20}
+    cache = Cache(tmp_path / "c.sqlite")
+    data = crowd.collect_bluesky(cfg, cache, "game-01", start, nxt, ["gukesh", "sindarov"], search=search, now=T0 + timedelta(days=2))
+    assert data["posts_found"] == len(posts) and not data["truncated"]
+    assert len({c["id"] for c in data["comments"]}) == len(data["comments"]) == len(posts)
+    assert all("author" not in k and "uri" not in k for c in data["comments"] for k in c)
+    n = len(calls)
+    crowd.collect_bluesky(cfg, cache, "game-01", start, nxt, ["gukesh", "sindarov"], search=search, now=T0 + timedelta(days=2))
+    assert len(calls) == n                                                      # closed window: served from cache
+
+
+def test_bluesky_open_window_is_not_cached(tmp_path):
+    posts = {m: f"gukesh blitz post {m} " for m in range(0, 30)} | {m + 0.5: f"gukesh blitz again {m}" for m in range(0, 30)}
+    posts.update({m + 0.25: f"gukesh third wave {m}" for m in range(0, 30)} | {m + 0.75: f"gukesh fourth wave {m}" for m in range(0, 30)})
+    search, calls = fake_bsky(posts)                                            # 120 posts inside 30 minutes
+    start = int(T0.timestamp() * 1000)
+    cfg = {"max_window_hours": 48, "min_slice_minutes": 20}
+    cache = Cache(tmp_path / "c.sqlite")
+    data = crowd.collect_bluesky(cfg, cache, "game-04", start, None, ["gukesh"], search=search, now=T0 + timedelta(minutes=30))
+    assert not data["window_closed"]
+    n = len(calls)
+    crowd.collect_bluesky(cfg, cache, "game-04", start, None, ["gukesh"], search=search, now=T0 + timedelta(minutes=30))
+    assert len(calls) > n                                                       # still open: fetched again
+
+
+def test_normalise_wraps_old_single_source_files():
+    old = {"source": "youtube", "comments_labelled": 3}
+    assert crowd.normalise(old) == {"youtube": old}
+    assert crowd.normalise({"youtube": old}) == {"youtube": old}
+    assert crowd.normalise(None) == {}

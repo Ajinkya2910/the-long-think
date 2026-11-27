@@ -244,4 +244,7 @@ cg-board { border-radius: 6px; }
 .crowd .sub { font: 600 12px var(--sans); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 6px; }
 .crowd .videos { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; font-size: 13.5px; }
 .crowd .videos a { color: var(--ink); }
+.crowd-row { display: grid; grid-template-columns: 64px 62px 1fr 170px; gap: 10px; align-items: center; margin: 6px 0; }
+.crowd-row + .crowd-row:has(> a) { margin-top: 14px; }
+@media (max-width: 560px) { .crowd-row { grid-template-columns: 56px 1fr; } .crowd-row > :nth-child(3) { grid-column: 1 / -1; } .crowd-row > :nth-child(4) { grid-column: 1 / -1; } }
 .agree-yes { color: var(--best); font-weight: 700; } .agree-no { color: var(--critical); font-weight: 700; }

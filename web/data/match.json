@@ -140,22 +140,43 @@
     "black": 98.8
    },
    "crowd": {
-    "favours": {
-     "keys": {
-      "gukesh": "Gukesh D",
-      "sindarov": "Sindarov, Javokhir"
+    "youtube": {
+     "favours": {
+      "keys": {
+       "gukesh": "Gukesh D",
+       "sindarov": "Sindarov, Javokhir"
+      },
+      "counts": {
+       "gukesh": 48,
+       "sindarov": 9,
+       "none": 357
+      }
      },
-     "counts": {
-      "gukesh": 48,
-      "sindarov": 9,
-      "none": 357
+     "comments": 414,
+     "game_feel": {
+      "exciting": 25,
+      "boring": 11,
+      "none": 378
      }
     },
-    "comments": 414,
-    "game_feel": {
-     "exciting": 25,
-     "boring": 11,
-     "none": 378
+    "bluesky": {
+     "favours": {
+      "keys": {
+       "gukesh": "Gukesh D",
+       "sindarov": "Sindarov, Javokhir"
+      },
+      "counts": {
+       "gukesh": 4,
+       "sindarov": 15,
+       "none": 167
+      }
+     },
+     "comments": 186,
+     "game_feel": {
+      "exciting": 16,
+      "boring": 7,
+      "none": 163
+     }
     }
    },
    "sparkline": [
@@ -275,22 +296,43 @@
     "black": 97.2
    },
    "crowd": {
-    "favours": {
-     "keys": {
-      "gukesh": "Gukesh D",
-      "sindarov": "Sindarov, Javokhir"
+    "youtube": {
+     "favours": {
+      "keys": {
+       "gukesh": "Gukesh D",
+       "sindarov": "Sindarov, Javokhir"
+      },
+      "counts": {
+       "gukesh": 8,
+       "sindarov": 13,
+       "none": 230
+      }
      },
-     "counts": {
-      "gukesh": 8,
-      "sindarov": 13,
-      "none": 230
+     "comments": 251,
+     "game_feel": {
+      "exciting": 5,
+      "boring": 54,
+      "none": 192
      }
     },
-    "comments": 251,
-    "game_feel": {
-     "exciting": 5,
-     "boring": 54,
-     "none": 192
+    "bluesky": {
+     "favours": {
+      "keys": {
+       "gukesh": "Gukesh D",
+       "sindarov": "Sindarov, Javokhir"
+      },
+      "counts": {
+       "gukesh": 2,
+       "sindarov": 3,
+       "none": 117
+      }
+     },
+     "comments": 122,
+     "game_feel": {
+      "exciting": 4,
+      "boring": 26,
+      "none": 92
+     }
     }
    },
    "sparkline": [
@@ -374,22 +416,43 @@
     "black": 99.2
    },
    "crowd": {
-    "favours": {
-     "keys": {
-      "gukesh": "Gukesh D",
-      "sindarov": "Sindarov, Javokhir"
+    "youtube": {
+     "favours": {
+      "keys": {
+       "gukesh": "Gukesh D",
+       "sindarov": "Sindarov, Javokhir"
+      },
+      "counts": {
+       "gukesh": 2,
+       "sindarov": 6,
+       "none": 51
+      }
      },
-     "counts": {
-      "gukesh": 2,
-      "sindarov": 6,
-      "none": 51
+     "comments": 59,
+     "game_feel": {
+      "exciting": 3,
+      "boring": 4,
+      "none": 52
      }
     },
-    "comments": 59,
-    "game_feel": {
-     "exciting": 3,
-     "boring": 4,
-     "none": 52
+    "bluesky": {
+     "favours": {
+      "keys": {
+       "gukesh": "Gukesh D",
+       "sindarov": "Sindarov, Javokhir"
+      },
+      "counts": {
+       "gukesh": 6,
+       "sindarov": 5,
+       "none": 144
+      }
+     },
+     "comments": 155,
+     "game_feel": {
+      "exciting": 23,
+      "boring": 10,
+      "none": 122
+     }
     }
    },
    "sparkline": [
@@ -5831,5 +5894,5 @@
   }
  ],
  "alerts_min_games": 3,
- "generated_at": "2026-11-26T19:57:44+00:00"
+ "generated_at": "2026-11-27T22:51:09+00:00"
 }

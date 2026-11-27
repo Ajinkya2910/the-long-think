@@ -1,14 +1,19 @@
-"""Crowd mood from YouTube comments.
+"""Crowd mood from YouTube comments and Bluesky posts.
 
-Pipeline per game:
-1. YouTube Data API v3 (key in YOUTUBE_API_KEY): search.list for recap videos
-   published within `search_window_days` of the round start, videos.list for
-   titles/stats, commentThreads.list for top-level comments (no author data kept).
-2. Claude (Haiku by default) labels each comment: who the commenter favours,
+Pipeline per game and source:
+1. Collect public text, never author data:
+   * YouTube Data API v3 (key in YOUTUBE_API_KEY): search.list for recap videos
+     published within `search_window_days` of the round start, videos.list for
+     titles/stats, commentThreads.list for top-level comments.
+   * Bluesky public search (no login): posts naming either player, written
+     between this round's start and the next round's start. The unauthenticated
+     API returns at most 100 posts per request and refuses paging, so the window
+     is split into time slices, halving any slice that comes back full.
+2. Claude (Haiku by default) labels each comment/post: who the writer favours,
    tone toward each player, how the game felt, and opinions on specific moves.
    Move mentions are validated against the game's actual moves.
 3. Aggregates only are published: shares, counts, moves discussed, and an
-   "engine vs crowd" comparison. Raw comments stay in the local cache.
+   "engine vs crowd" comparison. Raw text stays in the local cache.
 """
 from __future__ import annotations
 
@@ -25,6 +30,7 @@ from .cache import Cache
 
 log = logging.getLogger(__name__)
 API = "https://www.googleapis.com/youtube/v3"
+BSKY_SEARCH = "https://api.bsky.app/xrpc/app.bsky.feed.searchPosts"
 PROMPT_VERSION = "crowd-v1"
 
 
@@ -83,24 +89,108 @@ def collect(cfg: dict, cache: Cache, game_id: str, round_no: int, starts_at_ms: 
     start = datetime.fromtimestamp(starts_at_ms / 1000, tz=timezone.utc)
     query = cfg.get("query", "{p1} {p2} game {round}").format(p1=players[0], p2=players[1], round=round_no)
     videos = find_videos(query, start, start + timedelta(days=float(cfg["search_window_days"])), int(cfg["videos_per_game"]))
-    seen, comments = set(), []
+    seen: set[str] = set()
+    comments = []
     for v in videos:
         cs = fetch_comments(v["id"], int(cfg["comments_per_video"]))
         v["comments_read"] = len(cs)
-        for c in cs:
-            norm = re.sub(r"\s+", " ", c["text"].strip().lower())
-            if len(norm.split()) < 3 or norm in seen:
-                continue
-            seen.add(norm)
-            comments.append({**c, "video": v["id"]})
+        comments += [{**c, "video": v["id"]} for c in _dedupe(cs, seen)]
     data = {"query": query, "fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "videos": videos, "comments": comments}
     cache.put("youtube", key, data)
     return data
 
 
+def _dedupe(items: list[dict], seen: set[str]) -> list[dict]:
+    """Drop very short texts and exact repeats (case/space-insensitive)."""
+    out = []
+    for c in items:
+        norm = re.sub(r"\s+", " ", c["text"].strip().lower())
+        if len(norm.split()) < 3 or norm in seen:
+            continue
+        seen.add(norm)
+        out.append(c)
+    return out
+
+
+# ---------------------------------------------------------------- Bluesky
+
+def _iso(t: datetime) -> str:
+    return t.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def bsky_search(term: str, since: datetime, until: datetime) -> list[dict]:
+    """One page (max 100) of posts containing `term`, newest first. No author data is kept."""
+    r = requests.get(BSKY_SEARCH, params={"q": term, "since": _iso(since), "until": _iso(until), "limit": 100, "sort": "latest"},
+                     headers={"User-Agent": "the-long-think/0.1"}, timeout=30)
+    r.raise_for_status()
+    out = []
+    for p in r.json().get("posts", []):
+        rec = p.get("record", {})
+        out.append({
+            "id": "bs-" + hashlib.sha1(p["uri"].encode()).hexdigest()[:12],
+            "text": str(rec.get("text", ""))[:600],
+            "likes": int(p.get("likeCount", 0)), "reposts": int(p.get("repostCount", 0)),
+            "published": rec.get("createdAt"), "langs": rec.get("langs") or [],
+        })
+    return out
+
+
+def _bsky_slices(term: str, since: datetime, until: datetime, min_slice: timedelta, search=None) -> tuple[list[dict], bool]:
+    """All posts in [since, until): split the window while a request comes back full.
+
+    Returns (posts, truncated); truncated is True if a minimum-size slice was still full.
+    """
+    search = search or bsky_search
+    posts = search(term, since, until)
+    if len(posts) < 100:
+        return posts, False
+    if until - since <= min_slice:
+        return posts, True
+    mid = since + (until - since) / 2
+    a, ta = _bsky_slices(term, since, mid, min_slice, search)
+    b, tb = _bsky_slices(term, mid, until, min_slice, search)
+    return a + b, ta or tb
+
+
+def bluesky_window(starts_at_ms: int, next_start_ms: int | None, max_hours: float, now: datetime | None = None) -> tuple[datetime, datetime, bool]:
+    """(since, until, closed): from this round's start to the next round's start, capped at max_hours and at now."""
+    now = now or datetime.now(timezone.utc)
+    since = datetime.fromtimestamp(starts_at_ms / 1000, tz=timezone.utc)
+    until = since + timedelta(hours=max_hours)
+    if next_start_ms:
+        until = min(until, datetime.fromtimestamp(next_start_ms / 1000, tz=timezone.utc))
+    return since, min(until, now), until <= now
+
+
+def collect_bluesky(cfg: dict, cache: Cache, game_id: str, starts_at_ms: int, next_start_ms: int | None, terms: list[str],
+                    refresh: bool = False, search=None, now: datetime | None = None) -> dict:
+    """Posts naming either player in this game's window. Cached once the window has closed."""
+    since, until, closed = bluesky_window(starts_at_ms, next_start_ms, float(cfg.get("max_window_hours", 48)), now)
+    key = f"{game_id}|{'+'.join(terms)}|{_iso(since)}|{_iso(until)}"
+    if not refresh and (hit := cache.get("bluesky", key)):
+        return hit
+    min_slice = timedelta(minutes=float(cfg.get("min_slice_minutes", 20)))
+    by_id: dict[str, dict] = {}
+    truncated = False
+    for term in terms:
+        posts, t = _bsky_slices(term, since, until, min_slice, search)
+        truncated |= t
+        for p in posts:
+            by_id.setdefault(p["id"], p)
+    found = sorted(by_id.values(), key=lambda p: p["published"] or "")
+    data = {
+        "query": " OR ".join(terms), "fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "window": [_iso(since), _iso(until)], "window_closed": closed, "truncated": truncated,
+        "posts_found": len(found), "comments": _dedupe(found, set()),
+    }
+    if closed:
+        cache.put("bluesky", key, data)
+    return data
+
+
 # ---------------------------------------------------------------- labelling
 
-SYSTEM = """You label YouTube comments about one game of the World Chess Championship match between {a} and {b}.
+SYSTEM = """You label {what} about one game of the World Chess Championship match between {a} and {b}.
 
 For every comment return:
 - favours: which player the commenter wants or expects to win the MATCH: "{ka}", "{kb}" or "none" (none if unclear).
@@ -147,7 +237,8 @@ def _keys(players: list[str], display: dict) -> tuple[str, str]:
     return tuple(display.get(p, {}).get("short", p).lower() for p in players)  # type: ignore[return-value]
 
 
-def label_comments(comments: list[dict], doc: dict, players: list[str], display: dict, cfg: dict, cache: Cache) -> list[dict]:
+def label_comments(comments: list[dict], doc: dict, players: list[str], display: dict, cfg: dict, cache: Cache,
+                   what: str = "YouTube comments") -> list[dict]:
     import anthropic
 
     ka, kb = _keys(players, display)
@@ -158,7 +249,7 @@ def label_comments(comments: list[dict], doc: dict, players: list[str], display:
     item[f"tone_{kb}"] = item.pop("tone_b")
     req = schema["properties"]["labels"]["items"]["required"]
     req[req.index("tone_a")], req[req.index("tone_b")] = f"tone_{ka}", f"tone_{kb}"
-    system = SYSTEM.format(a=players[0], b=players[1], ka=ka, kb=kb)
+    system = SYSTEM.format(what=what, a=players[0], b=players[1], ka=ka, kb=kb)
     game_moves = " ".join(m["label"] for m in doc["moves"])
     client = anthropic.Anthropic()
     out: list[dict] = []
@@ -242,10 +333,8 @@ def aggregate(doc: dict, data: dict, labels: list[dict], players: list[str], dis
         })
     moves.sort(key=lambda x: -x["mentions"])
     return {
-        "source": "youtube",
         "query": data["query"],
         "fetched_at": data["fetched_at"],
-        "videos": [{k: v[k] for k in ("title", "channel", "url", "views", "comments_read")} for v in data["videos"]],
         "comments_labelled": n,
         "favours": {"keys": {ka: players[0], kb: players[1]}, "counts": fav},
         "tone": tone,
@@ -256,16 +345,52 @@ def aggregate(doc: dict, data: dict, labels: list[dict], players: list[str], dis
     }
 
 
-def crowd_for_game(cfg_crowd: dict, cache: Cache, doc: dict, round_no: int, starts_at_ms: int | None, players: list[str], display: dict, refresh: bool = False) -> dict | None:
-    if not cfg_crowd.get("enabled") or not os.environ.get("YOUTUBE_API_KEY") or starts_at_ms is None:
+def _youtube(cfg: dict, cache: Cache, doc: dict, round_no: int, starts_at_ms: int, players: list[str], display: dict, refresh: bool) -> dict:
+    short = [display.get(p, {}).get("short", p) for p in players]
+    data = collect(cfg, cache, doc["id"], round_no, starts_at_ms, short, refresh)
+    out = {"source": "youtube", "query": data["query"], "fetched_at": data["fetched_at"], "comments_labelled": 0,
+           "videos": [{k: v.get(k, 0) for k in ("title", "channel", "url", "views", "comments_read")} for v in data["videos"]]}
+    if data["comments"]:
+        labels = label_comments(data["comments"], doc, players, display, cfg, cache, "YouTube comments")
+        out.update(aggregate(doc, data, labels, players, display, int(cfg["min_mentions"])), model=cfg["model"])
+    return out
+
+
+def _bluesky(cfg: dict, cfg_bs: dict, cache: Cache, doc: dict, starts_at_ms: int, next_start_ms: int | None,
+             players: list[str], display: dict, refresh: bool) -> dict:
+    terms = cfg_bs.get("terms") or [display.get(p, {}).get("short", p).lower() for p in players]
+    data = collect_bluesky(cfg_bs, cache, doc["id"], starts_at_ms, next_start_ms, terms, refresh)
+    out = {"source": "bluesky", "query": data["query"], "fetched_at": data["fetched_at"], "comments_labelled": 0,
+           "window": data["window"], "window_closed": data["window_closed"], "truncated": data["truncated"],
+           "posts_found": data["posts_found"]}
+    if data["comments"]:
+        labels = label_comments(data["comments"], doc, players, display, cfg, cache, "Bluesky posts")
+        out.update(aggregate(doc, data, labels, players, display, int(cfg["min_mentions"])), model=cfg["model"])
+    return out
+
+
+def crowd_for_game(cfg_crowd: dict, cache: Cache, doc: dict, round_no: int, starts_at_ms: int | None, players: list[str], display: dict,
+                   refresh: bool = False, next_start_ms: int | None = None) -> dict | None:
+    """{source: result} for every source that ran; None if none could run."""
+    if not cfg_crowd.get("enabled") or starts_at_ms is None:
         return None
-    try:
-        short = [display.get(p, {}).get("short", p) for p in players]
-        data = collect(cfg_crowd, cache, doc["id"], round_no, starts_at_ms, short, refresh)
-        if not data or not data["comments"]:
-            return {"source": "youtube", "comments_labelled": 0, "videos": data["videos"] if data else [], "query": data["query"] if data else None}
-        labels = label_comments(data["comments"], doc, players, display, cfg_crowd, cache)
-        return {**aggregate(doc, data, labels, players, display, int(cfg_crowd["min_mentions"])), "model": cfg_crowd["model"]}
-    except Exception as e:  # never break the pipeline over crowd data
-        log.warning("crowd mood failed for %s: %s", doc["id"], e)
-        return None
+    out: dict[str, dict] = {}
+    if os.environ.get("YOUTUBE_API_KEY"):
+        try:
+            out["youtube"] = _youtube(cfg_crowd, cache, doc, round_no, starts_at_ms, players, display, refresh)
+        except Exception as e:  # never break the pipeline over crowd data
+            log.warning("YouTube crowd failed for %s: %s", doc["id"], e)
+    cfg_bs = cfg_crowd.get("bluesky", {})
+    if cfg_bs.get("enabled"):
+        try:
+            out["bluesky"] = _bluesky(cfg_crowd, cfg_bs, cache, doc, starts_at_ms, next_start_ms, players, display, refresh)
+        except Exception as e:
+            log.warning("Bluesky crowd failed for %s: %s", doc["id"], e)
+    return out or None
+
+
+def normalise(crowd: dict | None) -> dict:
+    """Older game files stored one YouTube result directly; return {source: result}."""
+    if not crowd:
+        return {}
+    return {crowd["source"]: crowd} if "source" in crowd else dict(crowd)

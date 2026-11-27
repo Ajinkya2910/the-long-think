@@ -76,7 +76,7 @@ Results are cached by a hash of the facts, so you pay once per moment. Without a
 | `[critical]` | number of moments, minimum spacing, weights for eval swing / time / difficulty, novelty bonus |
 | `[patterns]` | prep-payoff horizon, missed-chance thresholds, games needed before records are reported |
 | `[match_odds]` | draw rate (and range for the band), White bonus in rating points |
-| `[crowd]` | YouTube search text, videos per game, comments per video, labelling model and batch size |
+| `[crowd]` | YouTube search text, videos per game, comments per video, labelling model and batch size; `[crowd.bluesky]` search terms and window |
 | `[narrative]` | on/off, model, effort |
 
 Secrets come only from env vars or `.env`: `ANTHROPIC_API_KEY`, `YOUTUBE_API_KEY`, `LICHESS_TOKEN`, plus `STOCKFISH_PATH` and `ENGINE_DEPTH` overrides.
@@ -109,10 +109,13 @@ Secrets come only from env vars or `.env`: `ANTHROPIC_API_KEY`, `YOUTUBE_API_KEY
   goes to tiebreaks) gives each player's chance after every game. The shaded band uses the low and high draw
   rates from `[match_odds]`. It's a rating model, not the engine's opinion of the games.
 - **Crowd mood** (`storyteller/crowd.py`, optional): for each game, the YouTube Data API finds recap videos published
-  within 3 days of the round and reads their top comments (no usernames kept). Claude Haiku labels each comment
+  within 3 days of the round and reads their top comments (no usernames kept). Bluesky's public search (no key
+  needed) adds every post naming either player between this round's start and the next round's start; it returns
+  100 posts per request and refuses paging without login, so busy windows are split into smaller time slices.
+  Windows still open are re-fetched on the next run. Claude Haiku labels each comment or post
   (who it backs, tone toward each player, exciting/boring, opinions on specific moves); moves are checked against
-  the game. Only counts are published, plus "engine vs crowd" for moves with 3+ opinions. Needs `YOUTUBE_API_KEY`;
-  raw comments stay in the local cache. `--refresh-crowd` re-fetches.
+  the game. Only counts are published, plus "engine vs crowd" for moves with 3+ opinions. YouTube needs
+  `YOUTUBE_API_KEY`; raw text stays in the local cache. `--refresh-crowd` re-fetches.
 - **Phases**: opening = book moves; endgame = 6 or fewer pieces besides kings and pawns; middlegame otherwise.
 
 ## Project layout

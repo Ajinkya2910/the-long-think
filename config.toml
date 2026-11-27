@@ -72,7 +72,8 @@ draw_rate_range = [0.55, 0.75]      # shaded band on the chart
 white_advantage_elo = 35            # rating-point bonus for having White
 
 [crowd]
-# YouTube comment mood. Needs YOUTUBE_API_KEY (Google Cloud, YouTube Data API v3) and the Anthropic key.
+# Crowd mood from YouTube comments and Bluesky posts, labelled by Claude (needs the Anthropic key).
+# YouTube needs YOUTUBE_API_KEY (Google Cloud, YouTube Data API v3); Bluesky search needs no key.
 enabled = true
 query = "{p1} {p2} game {round}"    # search text per game
 videos_per_game = 5
@@ -82,6 +83,12 @@ model = "claude-haiku-5-5"          # labels comments; cheap model is enough
 effort = "low"
 batch_size = 50                     # comments per Claude call
 min_mentions = 3                    # a move needs this many opinions to be listed
+
+[crowd.bluesky]
+enabled = true
+terms = ["gukesh", "sindarov"]      # posts containing either word
+max_window_hours = 48               # from round start until the next round starts, at most this long
+min_slice_minutes = 20              # smallest time slice when splitting a busy window (100 posts per request)
 
 [narrative]
 enabled = true                      # uses Claude only if ANTHROPIC_API_KEY (or a profile) is available

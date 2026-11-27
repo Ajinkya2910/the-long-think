@@ -338,9 +338,31 @@ function renderEvents(game, el, jump) {
   el.append(rx, pc, mc);
 }
 
+const SOURCES = {
+  youtube: { name: 'YouTube', unit: 'comments', q: 'Who do commenters think will win the match?' },
+  bluesky: { name: 'Bluesky', unit: 'posts', q: 'Who do Bluesky posters think will win the match?' },
+};
+
+function crowdSources(crowd) {
+  if (!crowd) return [];
+  const bySrc = crowd.source ? { [crowd.source]: crowd } : crowd;          // older files: one YouTube object
+  return Object.keys(SOURCES).filter((k) => bySrc[k]?.comments_labelled).map((k) => [k, bySrc[k]]);
+}
+
 function renderCrowd(game, el, jump) {
-  const c = game.crowd;
-  if (!c || !c.comments_labelled) return;
+  const list = crowdSources(game.crowd);
+  if (!list.length) return;
+  el.append(h('div', { class: 'section-h' }, h('h2', {}, 'What viewers said'), h('span', { class: 'muted' }, 'Opinion, not fact')));
+  for (const [src, c] of list) el.append(crowdCard(game, src, c, jump));
+}
+
+function fmtWindow(w) {
+  const o = { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'UTC' };
+  return `${new Date(w[0]).toLocaleString('en-GB', o)} – ${new Date(w[1]).toLocaleString('en-GB', o)} UTC`;
+}
+
+function crowdCard(game, src, c, jump) {
+  const S = SOURCES[src];
   const keys = c.favours.keys;               // {gukesh: 'Gukesh D', ...}
   const slotOf = (name) => (game.players.white.name === name ? game.players.white.slot : game.players.black.slot);
   const shortOf = (name) => shortName(game.players.white.name === name ? game.players.white : game.players.black);
@@ -351,10 +373,10 @@ function renderCrowd(game, el, jump) {
   const share = (v) => (total ? Math.round((100 * v) / total) : 0);
   const stack = total
     ? h('div', { class: 'stack', role: 'img', 'aria-label': picks.map((x) => `${x.label} ${share(x.v)}%`).join(', ') },
-      ...picks.filter((x) => x.v).map((x) => h('div', { style: `flex:${x.v};background:${x.bg}`, title: `${x.label}: ${x.v} of ${total} comments` }, share(x.v) >= 8 ? `${share(x.v)}%` : '')))
+      ...picks.filter((x) => x.v).map((x) => h('div', { style: `flex:${x.v};background:${x.bg}`, title: `${x.label}: ${x.v} of ${total} ${S.unit}` }, share(x.v) >= 8 ? `${share(x.v)}%` : '')))
     : h('p', { class: 'ink2' }, 'No comment picked a side.');
   const legend = h('div', { class: 'stack-legend' }, ...picks.map((x) => h('span', {}, h('span', { class: 'dot', style: `background:${x.bg}` }), ` backs ${x.label}: ${x.v}`)),
-    h('span', {}, `${total} of ${n} comments (${pct(total)}%) pick a side`));
+    h('span', {}, `${total} of ${n} ${S.unit} (${pct(total)}%) pick a side`));
   const tone = h('div', {}, h('div', { class: 'sub' }, 'Tone toward each player'),
     ...Object.entries(keys).map(([k, name]) => h('div', { style: 'font-size:14px;margin:4px 0' },
       h('span', { class: 'dot', style: `background:var(--p${slotOf(name)})` }), ` ${shortOf(name)}: `,
@@ -368,16 +390,24 @@ function renderCrowd(game, el, jump) {
       h('td', {}, h('button', { class: 'mv', onclick: () => jump(m.ply) }, m.label), m.ambiguous ? h('span', { class: 'muted', title: 'This move was played more than once; matched to the first time' }, ' *') : null),
       h('td', {}, `${m.praise} · ${m.criticism}`), h('td', {}, m.crowd), h('td', {}, m.engine),
       h('td', {}, m.agrees == null ? '–' : h('span', { class: m.agrees ? 'agree-yes' : 'agree-no' }, m.agrees ? 'yes' : 'no')))))));
-  const vids = h('div', {}, h('div', { class: 'sub' }, `Videos read (${c.videos.length})`),
-    h('ul', { class: 'videos' }, ...c.videos.map((v) => h('li', {}, h('a', { href: v.url, target: '_blank', rel: 'noopener' }, v.title), h('span', { class: 'muted' }, ` · ${v.channel} · ${v.comments_read} comments`)))));
-  el.append(
-    h('div', { class: 'section-h' }, h('h2', {}, 'What viewers said'), h('span', { class: 'muted' }, 'Opinion, not fact')),
-    h('div', { class: 'card crowd' },
-      h('div', { class: 'eyebrow' }, 'Crowd mood · YouTube'),
-      h('h3', {}, 'Who do commenters think will win the match?'),
-      stack, legend,
-      h('div', { class: 'crowd-grid' }, tone, vids, movesBox),
-      h('p', { class: 'note' }, `${n} public comments from the videos above, labelled by ${c.model || 'Claude'}. Only counts are published; usernames and comment text are not stored on this site. Fetched ${new Date(c.fetched_at).toLocaleDateString()}.`)));
+  const where = src === 'youtube'
+    ? h('div', {}, h('div', { class: 'sub' }, `Videos read (${c.videos.length})`),
+      h('ul', { class: 'videos' }, ...c.videos.map((v) => h('li', {}, h('a', { href: v.url, target: '_blank', rel: 'noopener' }, v.title), h('span', { class: 'muted' }, ` · ${v.channel} · ${v.comments_read} comments`)))))
+    : h('div', {}, h('div', { class: 'sub' }, 'Posts read'),
+      h('div', { style: 'font-size:14px;line-height:1.5' },
+        'Every public post containing ', h('b', {}, c.query.split(' OR ').join(' or ')), ', written ', fmtWindow(c.window), ' (this game’s start until the next game). ',
+        `${c.posts_found} found; ${n} kept after dropping repeats and posts under three words.`,
+        c.window_closed ? '' : ' The window is still open, so more posts will be added.',
+        c.truncated ? ' Some very busy minutes hit the search limit, so a few posts may be missing.' : ''));
+  const note = src === 'youtube'
+    ? `${n} public comments from the videos above, labelled by ${c.model || 'Claude'}. Only counts are published; usernames and comment text are not stored on this site. Fetched ${new Date(c.fetched_at).toLocaleDateString()}.`
+    : `${n} public Bluesky posts, labelled by ${c.model || 'Claude'}. Posts in this window can also be about the match in general or earlier games. Only counts are published; handles and post text are not stored on this site. Fetched ${new Date(c.fetched_at).toLocaleDateString()}.`;
+  return h('div', { class: 'card crowd', style: 'margin-bottom:14px' },
+    h('div', { class: 'eyebrow' }, `Crowd mood · ${S.name}`),
+    h('h3', {}, S.q),
+    stack, legend,
+    h('div', { class: 'crowd-grid' }, tone, where, movesBox),
+    h('p', { class: 'note' }, note));
 }
 
 function stat(label, value, sub) {

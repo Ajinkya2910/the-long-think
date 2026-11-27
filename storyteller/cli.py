@@ -28,7 +28,7 @@ def main(argv: list[str] | None = None) -> None:
     run.add_argument("--refresh", action="store_true", help="re-download PGNs even if cached")
     run.add_argument("--depth", type=int, help="override engine depth")
     run.add_argument("--skip-opening", action="store_true")
-    run.add_argument("--refresh-crowd", action="store_true", help="re-fetch YouTube videos/comments (uses API quota)")
+    run.add_argument("--refresh-crowd", action="store_true", help="re-fetch YouTube comments and Bluesky posts (uses YouTube quota)")
     run.add_argument("-v", "--verbose", action="store_true")
     args = ap.parse_args(argv)
 
@@ -62,8 +62,8 @@ def main(argv: list[str] | None = None) -> None:
 
 
 def add_crowd(cfg, cache, docs, refresh=False):
-    """Attach YouTube crowd mood to each game (kept from disk if no key is set)."""
-    from .crowd import crowd_for_game
+    """Attach crowd mood (YouTube, Bluesky) to each game; a source that can't run keeps its result from disk."""
+    from .crowd import crowd_for_game, normalise
 
     if "crowd" not in cfg.raw:
         return
@@ -78,10 +78,12 @@ def add_crowd(cfg, cache, docs, refresh=False):
     players = cfg["match"]["players"]
     for doc in docs:
         rnd = int(str(doc.get("round") or "0").split(".")[0] or 0)
-        crowd = crowd_for_game(cfg["crowd"], cache, doc, rnd, starts.get(rnd), players, display, refresh)
-        if crowd is not None:
-            doc["crowd"] = crowd
-            logging.info("[%s] crowd: %s comments from %d videos", doc["id"], crowd.get("comments_labelled"), len(crowd.get("videos", [])))
+        merged = normalise(doc.get("crowd"))
+        merged.update(crowd_for_game(cfg["crowd"], cache, doc, rnd, starts.get(rnd), players, display, refresh, starts.get(rnd + 1)) or {})
+        if merged:
+            doc["crowd"] = merged
+        for src, c in merged.items():
+            logging.info("[%s] crowd/%s: %s labelled", doc["id"], src, c.get("comments_labelled"))
 
 
 if __name__ == "__main__":
