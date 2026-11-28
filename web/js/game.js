@@ -35,85 +35,95 @@ function render(game) {
   const base = game.time_control.periods[0].seconds;
   const evals = [game.moves[0].eval_before, ...game.moves.map((m) => m.eval_after)];
   const summ = game.summary;
-  document.title = `${wn} vs ${bn}, ${game.id.replace('game-0', 'Game ').replace('game-', 'Game ')} · The Long Think`;
+  const roundNo = game.round?.split('.')[0];
+  document.title = `${wn} vs ${bn}, Game ${roundNo} · The Long Think`;
   const resultText = { '1-0': `${wn} won`, '0-1': `${bn} won`, '1/2-1/2': 'Draw', '*': 'In progress' }[game.result] || game.result;
+  const resShort = { '1-0': '1–0', '0-1': '0–1', '1/2-1/2': '½–½', '*': 'live' }[game.result] || game.result;
+  const moves = Math.ceil(N / 2);
+  const name = (side) => shortName(game.players[side]);
+  const dotEl = (side, extra = '') => h('span', { class: 'dot', style: `background:var(--p${game.players[side].slot});${extra}` });
+
+  // lowest clock before the move-40 time bonus
+  let low = null;
+  for (const m of game.moves) if (m.move_number <= 39 && m.clock.remaining != null && (!low || m.clock.remaining < low.clock.remaining)) low = m;
 
   // ---------- header ----------
   const nov = summ.novelty;
-  const lt = summ.longest_think;
-  const ltMove = lt ? game.moves[lt.ply] : null;
   const app = $('#app');
   app.innerHTML = '';
   app.append(
-    h('section', { class: 'hero' },
-      h('div', { class: 'eyebrow' }, `Round ${game.round?.split('.')[0]} · ${game.date?.replaceAll('.', '-')} · ${game.eco || ''} ${game.opening_name || ''}`),
-      h('h1', {}, h('span', { class: 'dot', style: `background:var(--p${W.slot});width:14px;height:14px;margin-right:10px` }), `${wn} `, h('span', { class: 'muted' }, 'vs'), ` ${bn}`,
-        h('span', { class: 'dot', style: `background:var(--p${B.slot});width:14px;height:14px;margin-left:10px` })),
-      h('p', {}, `${resultText} in ${Math.ceil(N / 2)} moves. ${wn} had White. ${game.gist?.source === 'claude' ? game.gist.summary : storyLine(game, wn, bn)}`),
+    h('section', { class: 'hero game-hero' },
+      h('div', {},
+        h('div', { class: 'eyebrow' }, `Game ${roundNo} · ${fmtDate(game.date)} · ${(game.opening_name || game.eco || '').replace(/^Ruy Lopez: /, '')}`),
+        h('h1', {}, game.gist?.headline || `${wn} vs ${bn}`),
+        h('p', { class: 'who' }, dotEl('white'), ` ${wn} (White) `, h('span', { class: 'muted' }, 'vs'), ' ', dotEl('black'), ` ${bn} (Black) · ${resultText} in ${moves} moves`),
+        h('p', {}, game.gist?.source === 'claude' ? game.gist.summary : storyLine(game, wn, bn))),
+      h('div', { class: 'mini-stats' },
+        stat('Result', resShort, `in ${moves} moves`),
+        stat('Prep ended', nov ? nov.label : '—', nov ? `by ${name(nov.side)}` : 'book data unavailable'),
+        stat('Lowest clock', low ? dur(low.clock.remaining) : '—', low ? `${name(low.side)}, move ${low.move_number}` : '', low && low.clock.remaining < 300 ? 'warn' : ''),
+        stat('Accuracy', `${summ.players.white.accuracy ?? '—'} · ${summ.players.black.accuracy ?? '—'}`, `${wn} · ${bn}`)),
     ),
-    h('section', { class: 'stats' },
-      stat('Prep ended', nov ? nov.label : '—', nov ? `${shortName(game.players[nov.side])} left the masters database` : 'book data unavailable'),
-      stat('Longest think', lt ? dur(lt.seconds) : '—', lt ? `${shortName(game.players[ltMove.side])} on ${lt.label}` : ''),
-      stat('Critical moments', String(game.critical_moments.length), 'ranked by eval swing, time and difficulty'),
-      stat('Accuracy', `${summ.players.white.accuracy ?? '—'} · ${summ.players.black.accuracy ?? '—'}`, `${wn} · ${bn} (non-book moves)`),
-    ),
-    h('section', { id: 'gist' }),
   );
 
-  // ---------- layout ----------
+  // ---------- story mode: board + key moments ----------
   const boardEl = h('div', { class: 'board-wrap' });
   const topLine = h('div', { class: 'players-line' });
   const botLine = h('div', { class: 'players-line bottom' });
-  const info = h('div', { class: 'card move-info' });
+  const moveLine = h('div', { class: 'move-line' });
   const movesEl = h('div', { class: 'moves' });
   let orientation = 'white';
   let showEngine = true;
   const engineBtn = h('button', { class: 'btn', 'aria-pressed': 'true', title: 'Show the engine’s top move from this position' }, 'Engine arrow');
   const controls = h('div', { class: 'controls' },
-    h('button', { class: 'btn icon-btn', title: 'Start (Home)', onclick: () => go(0) }, '⏮'),
-    h('button', { class: 'btn icon-btn', title: 'Back (←)', onclick: () => go(cur - 1) }, '◀'),
-    h('button', { class: 'btn icon-btn', title: 'Forward (→)', onclick: () => go(cur + 1) }, '▶'),
-    h('button', { class: 'btn icon-btn', title: 'End (End)', onclick: () => go(N) }, '⏭'),
-    h('button', { class: 'btn', title: 'Flip board', onclick: () => { orientation = orientation === 'white' ? 'black' : 'white'; cg.set({ orientation }); paintClocks(); } }, 'Flip'),
+    h('button', { class: 'btn icon-btn', title: 'Start (Home)', 'aria-label': 'Start', onclick: () => go(0) }, '⏮'),
+    h('button', { class: 'btn icon-btn', title: 'Previous move (←)', 'aria-label': 'Previous move', onclick: () => go(cur - 1) }, '◀'),
+    h('button', { class: 'btn icon-btn', title: 'Next move (→)', 'aria-label': 'Next move', onclick: () => go(cur + 1) }, '▶'),
+    h('button', { class: 'btn icon-btn', title: 'End (End)', 'aria-label': 'End', onclick: () => go(N) }, '⏭'),
+    h('button', { class: 'btn', title: 'Flip board (f)', onclick: () => { orientation = orientation === 'white' ? 'black' : 'white'; cg.set({ orientation }); paintClocks(); } }, 'Flip'),
     engineBtn,
   );
   engineBtn.addEventListener('click', () => { showEngine = !showEngine; engineBtn.setAttribute('aria-pressed', String(showEngine)); go(cur); });
 
+  const panel = h('div', { class: 'moment-panel', 'aria-live': 'polite' });
+  const momentNav = h('div', { class: 'moment-nav' });
+  const movesBox = h('details', { class: 'fold moves-fold' }, h('summary', {}, 'Move list'), movesEl);
+  if (innerWidth > 960) movesBox.open = true;
+
+  app.append(h('section', { class: 'card story-mode' },
+    h('div', { class: 'story-board' }, topLine, boardEl, botLine, controls, moveLine),
+    h('div', { class: 'story-text' }, panel, momentNav, movesBox)));
+
+  // ---------- whole game timeline ----------
   const evalEl = h('div', { class: 'chart' });
   const timeEl = h('div', { class: 'chart' });
-  const clockEl = h('div', { class: 'chart' });
-  const tableWrap = h('div', { class: 'scroll-x', hidden: true });
-  const tableBtn = h('button', { class: 'table-toggle', onclick: () => { tableWrap.hidden = !tableWrap.hidden; tableBtn.textContent = tableWrap.hidden ? 'Show data table' : 'Hide data table'; } }, 'Show data table');
-  const legendP = (side) => h('span', {}, h('span', { class: 'dot', style: `background:var(--p${game.players[side].slot})` }), ` ${shortName(game.players[side])} (${side})`);
+  const clockEl = h('div', { class: 'chart', hidden: true });
+  const legendP = (side) => h('span', {}, dotEl(side), ` ${name(side)}`);
+  const viewBtns = [['time', 'Time per move'], ['clock', 'Clocks']].map(([k, t]) => h('button', { class: 'pill', 'aria-pressed': String(k === 'time'), onclick: () => {
+    timeEl.hidden = k !== 'time'; clockEl.hidden = k !== 'clock';
+    viewBtns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.k === k)));
+    tl.render();
+  } }, t));
+  viewBtns.forEach((b, i) => { b.dataset.k = i ? 'clock' : 'time'; });
+  app.append(h('section', { class: 'card chart-card whole-game' },
+    h('div', { class: 'chart-head' }, h('h2', {}, 'The whole game'),
+      h('div', { class: 'legend' },
+        h('span', {}, h('span', { class: 'num', style: 'width:18px;height:18px;font-size:11px;margin-right:4px' }, '1'), 'key moment'),
+        h('span', {}, h('span', { class: 'dot', style: 'background:var(--critical)' }), ' mistake'),
+        h('span', {}, h('span', { style: 'display:inline-block;width:14px;height:10px;background:var(--book);border:1px solid var(--rule);vertical-align:-1px' }), ' known theory'))),
+    h('div', { class: 'sub-head' }, 'Who was better'),
+    evalEl,
+    h('div', { class: 'sub-head row' }, h('span', {}, 'Thinking'), h('div', { class: 'pills' }, ...viewBtns), h('div', { class: 'legend' }, legendP('white'), legendP('black'))),
+    timeEl, clockEl,
+    h('p', { class: 'note' }, `Top: the engine’s view on a winning-chances scale. Bottom: minutes spent per move (solid bars are long thinks), or each clock. Click anywhere to jump the board there. Time control: ${game.time_control.description}.`)));
 
-  app.append(h('div', { class: 'game-grid' },
-    h('div', { class: 'board-col' },
-      h('div', { class: 'card board-card' }, topLine, boardEl, botLine, controls),
-      info,
-      h('div', { class: 'card' }, movesEl),
-    ),
-    h('div', {},
-      h('div', { class: 'card chart-card' },
-        h('div', { class: 'chart-head' }, h('h2', {}, 'Who was better'), h('div', { class: 'legend' },
-          h('span', {}, h('span', { class: 'num', style: 'width:18px;height:18px;font-size:11px;margin-right:4px' }, '1'), 'critical moment'),
-          h('span', {}, h('span', { class: 'dot', style: 'background:var(--critical)' }), ' mistake'),
-          h('span', {}, h('span', { style: 'display:inline-block;width:14px;height:10px;background:var(--book);border:1px solid var(--rule);vertical-align:-1px' }), ' known theory'))),
-        evalEl,
-        h('p', { class: 'note' }, 'Engine evaluation in pawns, drawn on a winning-chances scale so small edges stay visible. Click anywhere to jump the board there.')),
-      h('div', { class: 'card chart-card' },
-        h('div', { class: 'chart-head' }, h('h2', {}, 'Where the time went'), h('div', { class: 'legend' }, legendP('white'), legendP('black'))),
-        timeEl,
-        h('p', { class: 'note' }, `Minutes spent on each move. Solid bars are long thinks (over ${15} min, or among a player’s 5 longest). Time control: ${game.time_control.description}.`)),
-      h('div', { class: 'card chart-card' },
-        h('div', { class: 'chart-head' }, h('h2', {}, 'Clock'), h('div', { class: 'legend' }, legendP('white'), legendP('black'))),
-        clockEl, tableBtn, tableWrap),
-      h('div', { class: 'section-h' }, h('h2', {}, 'Patterns in this game'), h('span', { class: 'muted' }, 'Click a move to load it on the board')),
-      h('div', { class: 'events', id: 'events' }),
-      h('div', { id: 'crowd' }),
-      h('div', { class: 'section-h' }, h('h2', {}, 'Critical moments'), h('span', { class: 'muted' }, 'Click a card to load it on the board')),
-      h('div', { class: 'moments', id: 'moments' }),
-    ),
-  ));
+  // ---------- folded sections ----------
+  const tableWrap = h('div', { class: 'scroll-x' });
+  app.append(h('section', { class: 'folds' },
+    game.gist?.sections?.length ? h('details', { class: 'fold' }, h('summary', {}, 'Read the full game summary'), h('div', { id: 'gist' })) : null,
+    h('details', { class: 'fold' }, h('summary', {}, 'Patterns: reactions to surprises, prep payoff, missed chances'), h('div', { class: 'events', id: 'events' })),
+    h('details', { class: 'fold opinion', id: 'crowd-fold' }, h('summary', {}, 'What fans said ', h('span', { class: 'kind kind-opinion' }, 'OPINION')), h('div', { id: 'crowd' })),
+    h('details', { class: 'fold' }, h('summary', {}, 'Every move with clocks and engine numbers'), tableWrap)));
 
   // ---------- board ----------
   const cg = Chessground(boardEl, {
@@ -124,15 +134,16 @@ function render(game) {
 
   // ---------- timeline ----------
   let cur = 0;
+  let momentIdx = null;
   const tl = new Timeline(N, { onSelect: (i) => go(i) });
   const mv = (i) => (i > 0 ? game.moves[i - 1] : null);
-  tl.add(evalEl, evalChart(game, evals, { onCritical: (ply) => go(ply + 1) }), (i) => {
+  tl.add(evalEl, evalChart(game, evals, { onCritical: (ply) => showMoment(game.critical_moments.findIndex((c) => c.ply === ply)) }), (i) => {
     const m = mv(i);
     return m ? `<b>${m.label}</b> · ${evalText(m.eval_after)}${m.classification ? ` · ${m.classification}` : ''}` : `Start · ${evalText(evals[0])}`;
   });
   tl.add(timeEl, timeChart(game, { whiteName: wn, blackName: bn }), (i) => {
     const m = mv(i);
-    return m ? `<b>${m.label}</b> · ${shortName(game.players[m.side])} thought ${dur(m.clock.spent)}${m.clock.adjustment ? ` · clock +${dur(m.clock.adjustment)}` : ''}` : null;
+    return m ? `<b>${m.label}</b> · ${name(m.side)} thought ${dur(m.clock.spent)}${m.clock.adjustment ? ` · clock +${dur(m.clock.adjustment)}` : ''}` : null;
   });
   tl.add(clockEl, clockChart(game, { whiteName: wn, blackName: bn }), (i) => {
     const c = clocksAt(i);
@@ -151,7 +162,7 @@ function render(game) {
     const c = clocksAt(cur);
     const toMove = cur % 2 === 0 ? 'white' : 'black';
     const line = (side) => [
-      h('span', {}, h('span', { class: 'dot', style: `background:var(--p${game.players[side].slot})` }), ` ${shortName(game.players[side])}`, h('span', { class: 'muted' }, ` ${game.players[side].elo || ''}`)),
+      h('span', {}, dotEl(side), ` ${name(side)}`, h('span', { class: 'muted' }, ` ${game.players[side].elo || ''}`)),
       h('span', { class: 'clock', style: toMove === side && cur < N ? 'outline:1.5px solid var(--ink)' : '' }, clock(c[side])),
     ];
     const topSide = orientation === 'white' ? 'black' : 'white';
@@ -174,34 +185,60 @@ function render(game) {
     }
   }
 
-  // ---------- move info ----------
-  function paintInfo() {
+  // ---------- current move (one line under the board) ----------
+  function paintMoveLine() {
     const m = mv(cur);
-    if (!m) {
-      info.replaceChildren(h('div', { class: 'eyebrow' }, 'Start'), h('h3', {}, 'Initial position'),
-        h('p', { class: 'ink2', style: 'margin:8px 0 0' }, 'Use ← → or click any chart to step through the game.'));
-      return;
-    }
+    if (!m) { put(moveLine, h('span', { class: 'muted' }, 'Start position · use ← → or the charts to step through')); return; }
     const best = m.top_lines[0];
-    const tags = m.tags.filter((t) => t !== 'critical').map((t) => h('span', { class: `tag ${t}` }, t.replaceAll('_', ' ')));
-    info.replaceChildren(
-      h('div', { class: 'eyebrow' }, `${shortName(game.players[m.side])} · ${m.phase}${m.in_book ? ' · book' : ''}`),
-      h('h3', {}, m.label, ...tags),
-      h('dl', { class: 'kv' },
-        h('dt', {}, 'Time spent'), h('dd', {}, m.clock.spent != null ? dur(m.clock.spent) : `unknown (clock +${dur(m.clock.adjustment)} outside the increments)`),
-        h('dt', {}, 'Clock after'), h('dd', {}, clock(m.clock.remaining)),
-        h('dt', {}, 'Evaluation'), h('dd', {}, `${evalText(m.eval_before)} → ${evalText(m.eval_after)}`),
-        h('dt', {}, 'Engine’s choice'), h('dd', {}, best ? (m.played_rank === 1 ? `${best.san} (played)` : `${best.san} (${evalText(best)}) · played move ranked ${m.played_rank ?? `outside top ${game.engine.multipv}`}`) : '—'),
-        h('dt', {}, 'Win chance lost'), h('dd', {}, `${m.wp_loss.toFixed(1)} pts · accuracy ${m.accuracy}%`),
-        h('dt', {}, 'Difficulty'), h('dd', {}, `${m.difficulty.score.toFixed(2)} · ${m.difficulty.good_moves} good move${m.difficulty.good_moves === 1 ? '' : 's'}${m.difficulty.only_move ? ' · only move' : ''}${m.difficulty.obvious ? ' · obvious (recapture/check)' : ''}`),
-      ),
-      h('div', { class: 'legend-arrows' },
-        h('span', {}, h('i', { style: 'background:#1baf7a' }), 'engine’s next move'),
-        h('span', {}, h('i', { style: 'background:var(--surface-2);outline:1px solid var(--rule)' }), 'last move played')),
-    );
+    put(moveLine, 
+      h('b', {}, m.label), h('span', { class: 'muted' }, ` · ${name(m.side)} · thought ${m.clock.spent != null ? dur(m.clock.spent) : '?'} · ${evalText(m.eval_before)} → ${evalText(m.eval_after)}`),
+      best && m.played_rank !== 1 ? h('span', { class: 'muted' }, ` · engine preferred ${best.san}`) : null,
+      m.classification ? h('span', { class: `tag ${m.classification}`, style: 'margin-left:6px' }, m.classification) : null);
   }
 
-  function go(i) {
+  // ---------- key moments ----------
+  const CM = game.critical_moments;
+  function showMoment(k) {
+    if (k == null || k < 0 || !CM.length) return;
+    momentIdx = ((k % CM.length) + CM.length) % CM.length;
+    const c = CM[momentIdx];
+    go(c.ply, momentIdx);
+  }
+  function paintPanel() {
+    if (!CM.length) { put(panel, h('p', { class: 'muted' }, 'No key moments detected in this game.')); put(momentNav, ); return; }
+    const k = momentIdx ?? 0;
+    const c = CM[k], m = game.moves[c.ply], n = c.narrative;
+    const sentences = (n.text || '').split(/(?<=[.!?])\s+(?=[A-Z])/);
+    const shortText = sentences.slice(0, 2).join(' ').trim();
+    const rest = sentences.slice(2).join(' ').trim();
+    const spent = m.clock.spent ?? 0;
+    const viewing = momentIdx != null && cur === c.ply;
+    put(panel, 
+      h('div', { class: 'moment-head' },
+        h('span', { class: 'eyebrow' }, `Key moment ${k + 1} of ${CM.length} · ${name(m.side)}`),
+        h('div', { class: 'dots' }, ...CM.map((_, j) => h('button', { class: 'mdot', 'aria-label': `Key moment ${j + 1}`, 'aria-pressed': String(j === k && viewing), onclick: () => showMoment(j) }, `${j + 1}`)))),
+      h('h2', {}, n.headline),
+      h('p', { class: 'lede' }, ...withMoves(shortText, game, (ply) => go(ply + 1))),
+      h('div', { class: 'chips' },
+        chip('Thought', dur(m.clock.spent)), chip('Clock left', dur(m.clock.remaining)),
+        chip('Engine', `${evalText(m.eval_before)} → ${evalText(m.eval_after)}`),
+        chip('Good moves', `${m.difficulty.good_moves}${m.difficulty.only_move ? ' (only move)' : ''}`)),
+      (rest || n.likely_reasons?.length) ? h('details', { class: 'why' },
+        h('summary', {}, spent >= 120 ? `Why it took ${dur(spent)}` : 'Why it was so quick'),
+        rest ? h('p', {}, ...withMoves(rest, game, (ply) => go(ply + 1))) : null,
+        n.likely_reasons?.length ? h('ul', {}, ...n.likely_reasons.map((r) => h('li', {}, r.reason))) : null) : null,
+      viewing ? h('div', { class: 'legend-arrows' }, h('span', {}, h('i', { style: 'background:#2a78d6' }), `played: ${m.san}`),
+        m.top_lines[0] && m.top_lines[0].uci !== m.uci ? h('span', {}, h('i', { style: 'background:#1baf7a' }), `engine’s choice: ${m.top_lines[0].san}`) : h('span', {}, 'the engine agreed'))
+        : h('button', { class: 'link-btn', onclick: () => showMoment(k) }, 'Show this moment on the board'),
+      h('details', { class: 'facts' },
+        h('summary', {}, n.source === 'claude' ? `Written by ${n.model} from these facts · show facts` : 'Written from a template using these facts · show facts'),
+        h('pre', {}, JSON.stringify({ facts: c.facts, score: c.score }, null, 2))));
+    put(momentNav, 
+      h('button', { class: 'btn big-btn', onclick: () => showMoment((momentIdx ?? 0) - 1) }, '◀ Previous'),
+      h('button', { class: 'btn big-btn primary', onclick: () => showMoment(momentIdx == null ? 0 : momentIdx + 1) }, momentIdx == null ? 'Start the key moments ▶' : 'Next moment ▶'));
+  }
+
+  function go(i, moment = null) {
     cur = Math.max(0, Math.min(N, i));
     const m = mv(cur);
     const next = game.moves[cur];
@@ -211,12 +248,20 @@ function render(game) {
       check: m ? /[+#]$/.test(m.san) : false,
       turnColor: cur % 2 === 0 ? 'white' : 'black',
     });
-    cg.setAutoShapes(showEngine && next?.top_lines?.[0] ? [arrow(next.top_lines[0].uci, 'best')] : []);
+    if (moment != null) {
+      // key moment: position before the move, with the move played and the engine's choice
+      const shapes = [arrow(next.uci, 'played')];
+      if (next.top_lines[0] && next.top_lines[0].uci !== next.uci) shapes.push(arrow(next.top_lines[0].uci, 'best'));
+      cg.setAutoShapes(shapes);
+    } else {
+      cg.setAutoShapes(showEngine && next?.top_lines?.[0] ? [arrow(next.top_lines[0].uci, 'best')] : []);
+    }
     btns.forEach((b) => b && b.classList.remove('on'));
-    if (btns[cur]) { btns[cur].classList.add('on'); btns[cur].scrollIntoView({ block: 'nearest' }); }
+    if (btns[cur]) { btns[cur].classList.add('on'); if (movesBox.open) btns[cur].scrollIntoView({ block: 'nearest' }); }
     tl.setCursor(cur);
     paintClocks();
-    paintInfo();
+    paintMoveLine();
+    paintPanel();
     const u = new URL(location); u.searchParams.set('ply', cur); history.replaceState(null, '', u);
   }
 
@@ -233,59 +278,30 @@ function render(game) {
   tableWrap.append(h('table', { class: 'data-table' },
     h('thead', {}, h('tr', {}, ...['Move', 'Player', 'Spent', 'Clock', 'Eval', 'Engine best', 'Win% lost'].map((t) => h('th', {}, t)))),
     h('tbody', {}, ...game.moves.map((m) => h('tr', {},
-      h('td', {}, m.label), h('td', {}, shortName(game.players[m.side])), h('td', {}, dur(m.clock.spent)), h('td', {}, clock(m.clock.remaining)),
+      h('td', {}, m.label), h('td', {}, name(m.side)), h('td', {}, dur(m.clock.spent)), h('td', {}, clock(m.clock.remaining)),
       h('td', {}, evalText(m.eval_after)), h('td', {}, m.top_lines[0]?.san || '—'), h('td', {}, m.wp_loss.toFixed(1))))),
   ));
 
-  // ---------- patterns in this game ----------
-  renderEvents(game, $('#events'), (ply) => { go(ply + 1); scrollTo({ top: 0, behavior: 'smooth' }); });
-
-  // ---------- game gist ----------
-  renderGist(game, $('#gist'), (ply) => { go(ply + 1); $('.board-wrap')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
-
-  // ---------- crowd mood ----------
-  renderCrowd(game, $('#crowd'), (ply) => { go(ply + 1); scrollTo({ top: 0, behavior: 'smooth' }); });
-
-  // ---------- critical moment cards ----------
-  const mom = $('#moments');
-  if (!game.critical_moments.length) mom.append(h('p', { class: 'muted' }, 'No critical moments detected.'));
-  game.critical_moments.forEach((c, k) => {
-    const m = game.moves[c.ply];
-    const f = c.facts, n = c.narrative;
-    const mini = h('div', { class: 'mini' });
-    const best = m.top_lines[0];
-    const card = h('article', { class: 'card moment', onclick: (e) => { if (!e.target.closest('details')) { go(c.ply + 1); scrollTo({ top: 0, behavior: 'smooth' }); } } },
-      h('div', {}, mini,
-        h('div', { class: 'legend-arrows' },
-          h('span', {}, h('i', { style: 'background:#2a78d6' }), 'played'),
-          best && best.uci !== m.uci ? h('span', {}, h('i', { style: 'background:#1baf7a' }), 'engine best') : h('span', {}, 'played = engine best'))),
-      h('div', {},
-        h('div', { class: 'eyebrow' }, `${shortName(game.players[m.side])} · ${m.phase}`),
-        h('h3', {}, h('span', { class: 'num' }, `${k + 1}`), n.headline),
-        h('p', {}, n.text),
-        n.likely_reasons?.length ? h('div', { class: 'reasons' },
-          h('div', { class: 'eyebrow' }, `What might have been on ${shortName(game.players[m.side])}’s mind`),
-          h('ul', {}, ...n.likely_reasons.map((r) => h('li', {}, r.reason)))) : null,
-        h('div', { class: 'chips' },
-          chip('Thought', dur(m.clock.spent)),
-          chip('Clock left', dur(m.clock.remaining)),
-          chip('Eval', `${evalText(m.eval_before)} → ${evalText(m.eval_after)}`),
-          chip('Good moves', `${m.difficulty.good_moves}${m.difficulty.only_move ? ' (only move)' : ''}`),
-          chip('Score', `${c.score.total.toFixed(2)}`)),
-        h('details', {},
-          h('summary', {}, n.source === 'claude' ? `Written by ${n.model} from these facts · show facts` : 'Written from a template using these facts · show facts'),
-          h('pre', {}, JSON.stringify({ facts: f, score: c.score }, null, 2))),
-      ),
-    );
-    mom.append(card);
-    const shapes = [arrow(m.uci, 'played')];
-    if (best && best.uci !== m.uci) shapes.push(arrow(best.uci, 'best'));
-    const mcg = Chessground(mini, { fen: m.fen_before, orientation: m.side, viewOnly: true, coordinates: false, drawable: { enabled: false, visible: true, brushes: BRUSHES } });
-    mcg.setAutoShapes(shapes);
-  });
+  const toBoard = (ply) => { go(ply + 1); $('.story-mode')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+  renderEvents(game, $('#events'), toBoard);
+  if ($('#gist')) renderGist(game, $('#gist'), toBoard);
+  renderCrowd(game, $('#crowd'), toBoard);
+  if (!$('#crowd').childElementCount) $('#crowd-fold').remove();
+  if (location.hash === '#crowd' && $('#crowd-fold')) { $('#crowd-fold').open = true; $('#crowd-fold').scrollIntoView(); }
 
   const startPly = parseInt(params.get('ply') ?? '', 10);
-  go(Number.isFinite(startPly) ? startPly : (game.critical_moments[0] ? 0 : 0));
+  if (Number.isFinite(startPly)) go(startPly);
+  else if (CM.length) showMoment(0);
+  else go(0);
+}
+
+// replaceChildren() turns null into the text "null"; drop empty parts first
+function put(el, ...kids) { el.replaceChildren(...kids.filter((k) => k != null && k !== false)); }
+
+function fmtDate(d) {
+  if (!d) return '';
+  const [y, m, day] = d.split('.').map(Number);
+  return new Date(Date.UTC(y, m - 1, day)).toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 }
 
 function renderEvents(game, el, jump) {
@@ -360,9 +376,7 @@ function withMoves(text, game, jump) {
 function renderGist(game, el, jump) {
   const g = game.gist;
   if (!g || !g.sections?.length) return;
-  el.append(h('div', { class: 'card gist' },
-    h('div', { class: 'eyebrow' }, 'How the game went'),
-    h('h2', {}, g.headline),
+  el.append(h('div', { class: 'gist' },
     h('div', { class: 'gist-sections' }, ...g.sections.map((x) => h('div', {}, h('h3', {}, x.title), h('p', {}, ...withMoves(x.text, game, jump))))),
     g.takeaways?.length ? h('div', { class: 'reasons' }, h('div', { class: 'eyebrow' }, 'Worth remembering'),
       h('ul', {}, ...g.takeaways.map((t) => h('li', {}, ...withMoves(t.point, game, jump))))) : null,
@@ -385,7 +399,6 @@ function crowdSources(crowd) {
 function renderCrowd(game, el, jump) {
   const list = crowdSources(game.crowd);
   if (!list.length) return;
-  el.append(h('div', { class: 'section-h' }, h('h2', {}, 'What viewers said'), h('span', { class: 'muted' }, 'Opinion, not fact')));
   for (const [src, c] of list) el.append(crowdCard(game, src, c, jump));
 }
 
@@ -443,8 +456,8 @@ function crowdCard(game, src, c, jump) {
     h('p', { class: 'note' }, note));
 }
 
-function stat(label, value, sub) {
-  return h('div', { class: 'card stat' }, h('div', { class: 'eyebrow' }, label), h('div', { class: 'v' }, value), h('div', { class: 's' }, sub));
+function stat(label, value, sub, cls = '') {
+  return h('div', { class: `card stat ${cls}` }, h('div', { class: 'eyebrow' }, label), h('div', { class: 'v' }, value), h('div', { class: 's' }, sub));
 }
 function chip(k, v) { return h('span', { class: 'chip' }, k, ' ', h('b', {}, v)); }
 

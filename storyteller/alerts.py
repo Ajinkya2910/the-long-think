@@ -60,6 +60,9 @@ STREAKS = {
     "time_used": "total thinking time",
     "longest_think": "longest think",
 }
+# short labels for the record tiles on the site
+TILE_LABEL = {"longest_think": "longest think", "prep_time": "prep time", "accuracy": "accuracy",
+              "time_used": "thinking time", "reaction_to_novelty": "answer to a novelty"}
 ORDINAL = {2: "second", 3: "third", 4: "fourth", 5: "fifth", 6: "sixth", 7: "seventh", 8: "eighth", 9: "ninth", 10: "tenth"}
 
 
@@ -110,9 +113,11 @@ def alerts_after(docs: list[dict], display: dict, min_games: int = 3) -> list[di
                     continue
                 if hi_txt and cur[metric] > max(prev):
                     extra = f" ({cur['longest_think_label']})" if metric == "longest_think" else ""
-                    out.append(_alert(latest, name, "record", f"{gname}: {n} set {hi_txt.format(extra=extra)}: {fmt(cur[metric])} (previous high {fmt(max(prev))}).", metric, series))
+                    out.append(_alert(latest, name, "record", f"{gname}: {n} set {hi_txt.format(extra=extra)}: {fmt(cur[metric])} (previous high {fmt(max(prev))}).", metric, series,
+                                      tile={"badge": "new high", "value": fmt(cur[metric]), "label": TILE_LABEL[metric], "was": fmt(max(prev))}))
                 elif lo_txt and cur[metric] < min(prev):
-                    out.append(_alert(latest, name, "record", f"{gname}: {n} set {lo_txt}: {fmt(cur[metric])} (previous low {fmt(min(prev))}).", metric, series))
+                    out.append(_alert(latest, name, "record", f"{gname}: {n} set {lo_txt}: {fmt(cur[metric])} (previous low {fmt(min(prev))}).", metric, series,
+                                      tile={"badge": "new low", "value": fmt(cur[metric]), "label": TILE_LABEL[metric], "was": fmt(min(prev))}))
 
         for metric, words in STREAKS.items():
             vals = [s[metric] for s in series]
@@ -122,7 +127,9 @@ def alerts_after(docs: list[dict], display: dict, min_games: int = 3) -> list[di
             if length >= 3 and direction:
                 nth = ORDINAL.get(length - 1, f"{length - 1}th")
                 verb = "rose" if direction > 0 else "fell"
-                out.append(_alert(latest, name, "streak", f"{n}'s {words} {verb} for the {nth} game in a row ({' → '.join(_fmt_metric(metric, v) for v in vals[-length:])}).", metric, series))
+                path = " → ".join(_fmt_metric(metric, v) for v in vals[-length:])
+                out.append(_alert(latest, name, "streak", f"{n}'s {words} {verb} for the {nth} game in a row ({path}).", metric, series,
+                                  short=f"{words[0].upper() + words[1:]} {verb} again: {path}"))
 
         for metric, text in (
             ("errors", f"{gname}: {n}'s first mistake of the match (engine-classified)."),
@@ -157,8 +164,8 @@ def _fmt_metric(metric: str, v) -> str:
     return f"{v:.1f}%" if metric == "accuracy" else fmt_dur(v)
 
 
-def _alert(doc: dict, player: str | None, kind: str, text: str, metric: str, evidence) -> dict:
-    return {"game_id": doc["id"], "game": _game_name(doc), "player": player, "kind": kind, "metric": metric, "text": text, "evidence": evidence}
+def _alert(doc: dict, player: str | None, kind: str, text: str, metric: str, evidence, **extra) -> dict:
+    return {"game_id": doc["id"], "game": _game_name(doc), "player": player, "kind": kind, "metric": metric, "text": text, "evidence": evidence, **extra}
 
 
 def alert_history(docs: list[dict], display: dict, min_games: int = 3) -> list[dict]:

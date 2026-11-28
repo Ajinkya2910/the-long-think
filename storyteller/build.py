@@ -15,6 +15,7 @@ from .ingest import read_pairings
 from .match_odds import win_probability
 from .opening_tree import opening_tree
 from .ingest import ParsedGame
+from .headlines import chart_headlines, game_tag, lowest_clock_before_40, prep_series
 from .narrative import moment_facts, narrate
 from .opening import opening_pass
 from .patterns import game_summary, match_patterns
@@ -118,6 +119,10 @@ def write_outputs(cfg: Config, docs: list[dict], cache: Cache | None = None) -> 
             "crowd": ({src: {"favours": c["favours"], "comments": c["comments_labelled"], "game_feel": c.get("game_feel")}
                        for src, c in (doc.get("crowd") or {}).items() if c.get("comments_labelled")} or None),
             "sparkline": [round(doc["moves"][0]["eval_before"]["wp"], 1)] + [round(m["eval_after"]["wp"], 1) for m in doc["moves"]],
+            "headline": (doc.get("gist") or {}).get("headline"),
+            "tag": game_tag(doc),
+            "moves_count": doc["moves"][-1]["move_number"],
+            "lowest_clock": lowest_clock_before_40(doc),
         })
     pairings = read_pairings(sorted((cfg.data_dir / "raw").glob("*.pgn")))
     odds = win_probability(pairings, cfg["match_odds"], cfg["match"]["players"], display) if "match_odds" in cfg.raw else None
@@ -131,6 +136,8 @@ def write_outputs(cfg: Config, docs: list[dict], cache: Cache | None = None) -> 
         log.info("match story: %s (%s)", story["headline"], story["source"])
     match = {
         "story": story,
+        "headlines": chart_headlines(patterns["players"]),
+        "prep": prep_series(docs, display),
         "schedule": schedule,
         "schema_version": SCHEMA_VERSION,
         "name": cfg["match"]["name"],

@@ -311,6 +311,44 @@
    ]
   }
  },
+ "headlines": {
+  "phase": "Both players spend most of their time in the middlegame",
+  "pressure": "Neither player has slipped with under 10 minutes left",
+  "think": "So far, longer thinks haven't meant more accurate moves",
+  "hard": "Both were near-perfect when only a few good moves existed"
+ },
+ "prep": {
+  "games": [
+   1,
+   2,
+   3
+  ],
+  "players": {
+   "Sindarov": [
+    317,
+    470,
+    2085
+   ],
+   "Gukesh": [
+    1515,
+    1005,
+    117
+   ]
+  },
+  "headline": "Prep time is moving in opposite directions",
+  "text": {
+   "Sindarov": [
+    "5m 17s",
+    "7m 50s",
+    "34m 45s"
+   ],
+   "Gukesh": [
+    "25m 15s",
+    "16m 45s",
+    "1m 57s"
+   ]
+  }
+ },
  "schedule": [
   {
    "id": "xLgOJ6cb",
@@ -569,7 +607,16 @@
     50.0,
     50.0,
     50.0
-   ]
+   ],
+   "headline": "Berlin Wall stands firm as Sindarov and Gukesh draw",
+   "tag": "Gukesh thought 36 min on one move",
+   "moves_count": 38,
+   "lowest_clock": {
+    "side": "black",
+    "seconds": 280,
+    "label": "36...Kg8",
+    "ply": 71
+   }
   },
   {
    "id": "game-02",
@@ -689,7 +736,16 @@
     50.7,
     50.7,
     51.4
-   ]
+   ],
+   "headline": "Quiet London System ends in a short, balanced draw",
+   "tag": "Drawn in 20 moves",
+   "moves_count": 20,
+   "lowest_clock": {
+    "side": "white",
+    "seconds": 2533,
+    "label": "20.Bg3",
+    "ply": 38
+   }
   },
   {
    "id": "game-03",
@@ -754,16 +810,16 @@
        "sindarov": "Sindarov, Javokhir"
       },
       "counts": {
-       "gukesh": 6,
+       "gukesh": 7,
        "sindarov": 5,
-       "none": 144
+       "none": 147
       }
      },
-     "comments": 155,
+     "comments": 159,
      "game_feel": {
       "exciting": 23,
       "boring": 10,
-      "none": 122
+      "none": 126
      }
     }
    },
@@ -889,7 +945,16 @@
     50.0,
     50.0,
     50.0
-   ]
+   ],
+   "headline": "Flawless Berlin battle ends level after Sindarov's clock scare",
+   "tag": "Sindarov down to 8 seconds",
+   "moves_count": 60,
+   "lowest_clock": {
+    "side": "white",
+    "seconds": 8,
+    "label": "39.Bb4",
+    "ply": 76
+   }
   }
  ],
  "patterns": {
@@ -5737,7 +5802,13 @@
        "time_trouble_moves": 1,
        "missed_chances": 0
       }
-     ]
+     ],
+     "tile": {
+      "badge": "new low",
+      "value": "1m 57s",
+      "label": "prep time",
+      "was": "16m 45s"
+     }
     },
     {
      "game_id": "game-03",
@@ -5786,7 +5857,13 @@
        "time_trouble_moves": 1,
        "missed_chances": 0
       }
-     ]
+     ],
+     "tile": {
+      "badge": "new high",
+      "value": "99.2%",
+      "label": "accuracy",
+      "was": "98.8%"
+     }
     },
     {
      "game_id": "game-03",
@@ -5835,7 +5912,13 @@
        "time_trouble_moves": 1,
        "missed_chances": 0
       }
-     ]
+     ],
+     "tile": {
+      "badge": "new high",
+      "value": "2h 23m",
+      "label": "thinking time",
+      "was": "1h 55m"
+     }
     },
     {
      "game_id": "game-03",
@@ -5884,7 +5967,8 @@
        "time_trouble_moves": 1,
        "missed_chances": 0
       }
-     ]
+     ],
+     "short": "Time used before leaving theory fell again: 25m 15s → 16m 45s → 1m 57s"
     },
     {
      "game_id": "game-03",
@@ -5933,7 +6017,8 @@
        "time_trouble_moves": 1,
        "missed_chances": 0
       }
-     ]
+     ],
+     "short": "Longest think fell again: 36m 14s → 29m 29s → 15m 51s"
     },
     {
      "game_id": "game-03",
@@ -5982,7 +6067,13 @@
        "time_trouble_moves": 7,
        "missed_chances": 0
       }
-     ]
+     ],
+     "tile": {
+      "badge": "new high",
+      "value": "34m 45s",
+      "label": "prep time",
+      "was": "7m 50s"
+     }
     },
     {
      "game_id": "game-03",
@@ -6031,7 +6122,13 @@
        "time_trouble_moves": 7,
        "missed_chances": 0
       }
-     ]
+     ],
+     "tile": {
+      "badge": "new high",
+      "value": "99.2%",
+      "label": "accuracy",
+      "was": "98.7%"
+     }
     },
     {
      "game_id": "game-03",
@@ -6080,7 +6177,13 @@
        "time_trouble_moves": 7,
        "missed_chances": 0
       }
-     ]
+     ],
+     "tile": {
+      "badge": "new high",
+      "value": "2h 26m",
+      "label": "thinking time",
+      "was": "1h 44m"
+     }
     },
     {
      "game_id": "game-03",
@@ -6129,7 +6232,8 @@
        "time_trouble_moves": 7,
        "missed_chances": 0
       }
-     ]
+     ],
+     "short": "Time used before leaving theory rose again: 5m 17s → 7m 50s → 34m 45s"
     },
     {
      "game_id": "game-03",
@@ -6206,5 +6310,5 @@
   }
  ],
  "alerts_min_games": 3,
- "generated_at": "2026-11-27T23:07:27+00:00"
+ "generated_at": "2026-11-28T02:17:19+00:00"
 }

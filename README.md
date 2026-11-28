@@ -126,6 +126,19 @@ Secrets come only from env vars or `.env`: `ANTHROPIC_API_KEY`, `YOUTUBE_API_KEY
   `YOUTUBE_API_KEY`; raw text stays in the local cache. `--refresh-crowd` re-fetches.
 - **Phases**: opening = book moves; endgame = 6 or fewer pieces besides kings and pawns; middlegame otherwise.
 
+## The site
+
+- **Home** (`index.html`): score and next game; one card per game with its headline and one computed tag;
+  "New after Game N" (top insight alerts); the story so far (short, full text on tap); and deep-dive tabs:
+  Who's the favourite?, Preparation, Clock & thinking, Insight alerts, Explore moves, What fans say. Tabs are
+  linkable (`#prep`, `#clock`, `#alerts`, …).
+- **Game** (`game.html`): opens on key moment 1 with the board showing the move played and the engine's choice;
+  Previous / Next steps through the key moments. One timeline card shows who was better and the thinking time
+  (or clocks). The full summary, patterns, fan comments and the move table are folded below.
+- Chart headlines and game-card tags come from fixed rules in `storyteller/headlines.py`, so they stay true after
+  every game; small samples are flagged. Tags: none = engine/clock/database fact, MODEL = rating model,
+  OPINION = fan comments.
+
 ## Project layout
 
 ```
@@ -133,7 +146,8 @@ config.toml              all tunables
 storyteller/             pipeline (ingest, engine, opening, timecontrol, analysis, narrative, patterns, build, cli)
 schema/game.schema.json  output contract for web/data/games/*.json (validated in tests)
 tests/                   clock math, critical-moment ranking, difficulty, grounding guard, schema
-web/                     static site: index.html (match + pattern finder), game.html (game story)
+web/                     static site: index.html (score, game cards, what's new, story, deep-dive tabs),
+                         game.html (story mode: board + key moments, whole-game timeline, folded details)
 web/vendor/chessground   vendored board (GPL-3.0, see its LICENSE)
 docs/IDEAS.md            pattern-finder roadmap
 ```
